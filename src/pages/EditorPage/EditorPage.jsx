@@ -1,15 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import FileTree from '../../components/editor/FileTree/FileTree';
 import EditorPanel from '../../components/editor/EditorPanel/EditorPanel';
 import PreviewPanel from '../../components/editor/PreviewPanel/PreviewPanel';
 import Resizer from '../../components/common/Resizer/Resizer';
-import Heatmap from '../../components/statistics/Heatmap/Heatmap';
 import './EditorPage.css';
 
 const EditorPage = () => {
-  const [activeTab, setActiveTab] = useState('editor');
   const [content, setContent] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [fileTreeWidth, setFileTreeWidth] = useState(250);
@@ -41,19 +39,6 @@ const EditorPage = () => {
     }
   ];
 
-  const dummyGrassData = [
-    { date: '2024-10-01', count: 1 },
-    { date: '2024-10-05', count: 3 },
-    { date: '2024-10-10', count: 5 },
-    { date: '2024-10-15', count: 8 },
-    { date: '2024-11-01', count: 2 },
-    { date: '2024-11-06', count: 10 }
-  ];
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
   const handleContentChange = (newContent) => {
     setContent(newContent);
   };
@@ -78,40 +63,34 @@ const EditorPage = () => {
   return (
     <div className="editor-page">
       <Header username="username" repository="morningpage" />
-      <TabNavigation onTabChange={handleTabChange} />
+      <TabNavigation />
       
       <div className="editor-page-content">
-        {activeTab === 'editor' ? (
-          <div className="editor-layout">
-            <div className="file-tree-container" style={{ width: `${fileTreeWidth}px` }}>
-              <FileTree files={dummyFiles} onFileSelect={handleFileSelect} />
-            </div>
-            
-            <Resizer onResize={handleFileTreeResize} direction="horizontal" />
-            
-            <div className="editor-container">
-              <EditorPanel
-                content={content}
-                onChange={handleContentChange}
-                onTogglePreview={handleTogglePreview}
-                showPreview={showPreview}
-              />
-            </div>
+        <div className="editor-layout">
+          <div className="file-tree-container" style={{ width: `${fileTreeWidth}px` }}>
+            <FileTree files={dummyFiles} onFileSelect={handleFileSelect} />
+          </div>
+          
+          <Resizer onResize={handleFileTreeResize} direction="horizontal" />
+          
+          <div className="editor-container">
+            <EditorPanel
+              content={content}
+              onChange={handleContentChange}
+              onTogglePreview={handleTogglePreview}
+              showPreview={showPreview}
+            />
+          </div>
 
-            {showPreview && (
-              <>
-                <Resizer onResize={handlePreviewResize} direction="horizontal" />
-                <div className="preview-container" style={{ width: `${previewWidth}px` }}>
-                  <PreviewPanel content={content} />
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="statistics-layout">
-            <Heatmap data={dummyGrassData} />
-          </div>
-        )}
+          {showPreview && (
+            <>
+              <Resizer onResize={handlePreviewResize} direction="horizontal" />
+              <div className="preview-container" style={{ width: `${previewWidth}px` }}>
+                <PreviewPanel content={content} />
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
