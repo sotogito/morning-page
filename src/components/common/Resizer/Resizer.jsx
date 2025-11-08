@@ -5,11 +5,12 @@ const Resizer = ({ onResize, direction = 'horizontal' }) => {
   const handleMouseDown = useCallback((e) => {
     e.preventDefault();
     
-    const startPos = direction === 'horizontal' ? e.clientX : e.clientY;
+    let lastPos = direction === 'horizontal' ? e.clientX : e.clientY;
     
     const handleMouseMove = (moveEvent) => {
       const currentPos = direction === 'horizontal' ? moveEvent.clientX : moveEvent.clientY;
-      const delta = currentPos - startPos;
+      const delta = currentPos - lastPos;
+      lastPos = currentPos;
       onResize?.(delta);
     };
     
