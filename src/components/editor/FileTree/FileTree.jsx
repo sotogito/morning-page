@@ -5,7 +5,8 @@ const FileTree = ({
   files = [], 
   onFileSelect, 
   selectedFile = null,
-  initialExpandedFolders = []
+  initialExpandedFolders = [],
+  todayFilePath = ''
 }) => {
   const [expandedFolders, setExpandedFolders] = useState(new Set(initialExpandedFolders));
 
@@ -30,12 +31,13 @@ const FileTree = ({
       const isFolder = item.type === 'folder';
       const isExpanded = expandedFolders.has(item.path);
       const isSelected = !isFolder && selectedFile?.path === item.path;
+      const isToday = !isFolder && item.path === todayFilePath;
       const displayName = isFolder ? item.name : item.name.replace(/\.md$/, '');
       
       return (
         <div key={index} className="tree-item-container">
           <div
-            className={`tree-item ${!isFolder ? 'file' : ''} ${isSelected ? 'selected' : ''}`}
+            className={`tree-item ${!isFolder ? 'file' : ''} ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
             style={{ paddingLeft: `${depth * 16 + 8}px` }}
             onClick={() => {
               if (isFolder) {

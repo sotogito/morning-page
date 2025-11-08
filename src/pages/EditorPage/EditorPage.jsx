@@ -18,6 +18,7 @@ const EditorPage = () => {
   const [previewWidth, setPreviewWidth] = useState(400);
   const [selectedFile, setSelectedFile] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState([]);
+  const [todayFilePath, setTodayFilePath] = useState('');
   const { toasts, showError, showInfo, removeToast } = useToast();
 
   // 더미 데이터 (초기값)
@@ -65,6 +66,8 @@ const EditorPage = () => {
     const fileName = `${dateStr}.md`;
     const filePath = `${monthFolder}/${weekFolder}/${fileName}`;
     
+    // 오늘 파일 경로 저장
+    setTodayFilePath(filePath);
 
     const foldersToExpand = [
       monthFolder,
@@ -168,6 +171,7 @@ const EditorPage = () => {
               onFileSelect={handleFileSelect}
               selectedFile={selectedFile}
               initialExpandedFolders={expandedFolders}
+              todayFilePath={todayFilePath}
             />
           </div>
           

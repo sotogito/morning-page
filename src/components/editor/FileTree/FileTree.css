@@ -47,12 +47,15 @@
 }
 
 .tree-item.selected {
-  background-color: var(--color-bg-secondary);
-  font-weight: var(--font-weight-semibold);
+  background-color: var(--color-bg-overlay);
 }
 
 .tree-item.selected .tree-name {
   color: var(--color-text-primary);
+}
+
+.tree-item.today .tree-name {
+  font-weight: var(--font-weight-semibold);
 }
 
 .tree-icon {
