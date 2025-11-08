@@ -17,6 +17,7 @@ const EditorPage = () => {
   const [fileTreeWidth, setFileTreeWidth] = useState(250);
   const [previewWidth, setPreviewWidth] = useState(400);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [expandedFolders, setExpandedFolders] = useState([]);
   const { toasts, showError, showInfo, removeToast } = useToast();
 
   // 더미 데이터 (초기값)
@@ -63,6 +64,13 @@ const EditorPage = () => {
     const dateStr = parts[2];     // "2025-11-08"
     const fileName = `${dateStr}.md`;
     const filePath = `${monthFolder}/${weekFolder}/${fileName}`;
+    
+
+    const foldersToExpand = [
+      monthFolder,
+      `${monthFolder}/${weekFolder}`
+    ];
+    setExpandedFolders(foldersToExpand);
 
     // 파일 추가 로직
     setFiles(prevFiles => {
@@ -159,6 +167,7 @@ const EditorPage = () => {
               files={files} 
               onFileSelect={handleFileSelect}
               selectedFile={selectedFile}
+              initialExpandedFolders={expandedFolders}
             />
           </div>
           

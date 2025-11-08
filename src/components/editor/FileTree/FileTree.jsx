@@ -1,12 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './FileTree.css';
 
 const FileTree = ({ 
   files = [], 
   onFileSelect, 
-  selectedFile = null 
+  selectedFile = null,
+  initialExpandedFolders = []
 }) => {
-  const [expandedFolders, setExpandedFolders] = useState(new Set());
+  const [expandedFolders, setExpandedFolders] = useState(new Set(initialExpandedFolders));
+
+  useEffect(() => {
+    if (initialExpandedFolders.length > 0) {
+      setExpandedFolders(new Set(initialExpandedFolders));
+    }
+  }, [initialExpandedFolders]);
 
   const toggleFolder = (folderPath) => {
     const newExpanded = new Set(expandedFolders);
