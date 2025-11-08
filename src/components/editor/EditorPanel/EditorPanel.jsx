@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import './EditorPanel.css';
+import { ERROR_MESSAGE } from '../../../constants/ErrorMessages';
 
 const EditorPanel = ({ 
   content = '', 
   onChange, 
   onTogglePreview,
-  showPreview = false 
+  showPreview = false,
+  onError,
 }) => {
   const [title, setTitle] = useState('');
   const [charCount, setCharCount] = useState(0);
@@ -31,14 +33,17 @@ const EditorPanel = ({
   };
 
   const handleContentDelete = (e) => {
-    if(e.key == 'Backspace') {
-      return e.preventDefault();
+    if(e.key === 'Backspace') {
+      e.preventDefault();
+      onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
+      return;
     }
 
     const textarea = e.target;
     const hasSelection = textarea.selectionStart !== textarea.selectionEnd;
     if(hasSelection) {
       e.preventDefault();
+      onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
     }
   }
 
@@ -93,4 +98,3 @@ const EditorPanel = ({
 };
 
 export default EditorPanel;
-

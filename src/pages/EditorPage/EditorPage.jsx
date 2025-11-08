@@ -5,6 +5,8 @@ import FileTree from '../../components/editor/FileTree/FileTree';
 import EditorPanel from '../../components/editor/EditorPanel/EditorPanel';
 import PreviewPanel from '../../components/editor/PreviewPanel/PreviewPanel';
 import Resizer from '../../components/common/Resizer/Resizer';
+import ToastContainer from '../../components/common/Message/ToastContainer';
+import useToast from '../../hooks/useToast';
 import './EditorPage.css';
 
 const EditorPage = () => {
@@ -12,6 +14,7 @@ const EditorPage = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [fileTreeWidth, setFileTreeWidth] = useState(250);
   const [previewWidth, setPreviewWidth] = useState(400);
+  const { toasts, showError, showInfo, removeToast } = useToast();
 
   // 더미 데이터
   const dummyFiles = [
@@ -47,6 +50,14 @@ const EditorPage = () => {
     setShowPreview(!showPreview);
   };
 
+  const handleInfoMessage = (message) => {
+    showInfo(message);
+  };
+
+  const handleErrorMessage = (message) => {
+    showError(message);
+  };
+
   const handleFileTreeResize = (delta) => {
     setFileTreeWidth(prev => Math.max(200, Math.min(500, prev + delta)));
   };
@@ -62,6 +73,7 @@ const EditorPage = () => {
 
   return (
     <div className="editor-page">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       <Header username="username" repository="morningpage" />
       <TabNavigation />
       
@@ -79,6 +91,7 @@ const EditorPage = () => {
               onChange={handleContentChange}
               onTogglePreview={handleTogglePreview}
               showPreview={showPreview}
+              onError={handleErrorMessage}
             />
           </div>
 
@@ -97,4 +110,3 @@ const EditorPage = () => {
 };
 
 export default EditorPage;
-
