@@ -23,6 +23,7 @@ const FileTree = ({
       const isFolder = item.type === 'folder';
       const isExpanded = expandedFolders.has(item.path);
       const isSelected = !isFolder && selectedFile?.path === item.path;
+      const displayName = isFolder ? item.name : item.name.replace(/\.md$/, '');
       
       return (
         <div key={index} className="tree-item-container">
@@ -40,7 +41,7 @@ const FileTree = ({
             <span className="tree-icon">
               {isFolder ? (isExpanded ? '▼' : '▶') : '📄'}
             </span>
-            <span className="tree-name">{item.name}</span>
+            <span className="tree-name">{displayName}</span>
           </div>
           {isFolder && isExpanded && item.children && (
             <div className="tree-children">

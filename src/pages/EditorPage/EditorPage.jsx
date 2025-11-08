@@ -19,18 +19,8 @@ const EditorPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const { toasts, showError, showInfo, removeToast } = useToast();
 
-  // 페이지 로드 시 제목 생성 (나중에 GitHub 확인 로직 추가 예정)
-  useEffect(() => {
-    // TODO: GitHub에서 파일 목록 불러오기
-    // TODO: 오늘 날짜 파일 있는지 확인
-    // TODO: 없으면 제목 생성 + FileTree에 추가
-    
-    const todayTitle = createTitle();
-    setTitle(todayTitle);
-  }, []);
-
-  // 더미 데이터
-  const dummyFiles = [
+  // 더미 데이터 (초기값)
+  const initialFiles = [
     {
       name: '2024',
       type: 'folder',
@@ -54,6 +44,73 @@ const EditorPage = () => {
       path: '2024-11-06.md'
     }
   ];
+
+  const [files, setFiles] = useState(initialFiles);
+
+  // 페이지 로드 시 오늘 날짜 파일 확인 및 생성
+  useEffect(() => {
+    // TODO: GitHub에서 파일 목록 불러오기
+    // TODO: 오늘 날짜 파일 있는지 확인
+    
+    // 현재는 오늘 파일이 없다고 가정하고 생성
+    const todayTitle = createTitle();
+    setTitle(todayTitle);
+
+    // 제목에서 경로 파싱: "11월/2째주/2025-11-08 "
+    const parts = todayTitle.trim().split('/');
+    const monthFolder = parts[0]; // "11월"
+    const weekFolder = parts[1];  // "2째주"
+    const dateStr = parts[2];     // "2025-11-08"
+    const fileName = `${dateStr}.md`;
+    const filePath = `${monthFolder}/${weekFolder}/${fileName}`;
+
+    // 파일 추가 로직
+    setFiles(prevFiles => {
+      const newFiles = [...prevFiles];
+      
+      // 월 폴더 찾기 또는 생성
+      let monthNode = newFiles.find(node => node.name === monthFolder && node.type === 'folder');
+      if (!monthNode) {
+        monthNode = {
+          name: monthFolder,
+          type: 'folder',
+          path: monthFolder,
+          children: []
+        };
+        newFiles.push(monthNode);
+      }
+
+      // 주차 폴더 찾기 또는 생성
+      let weekNode = monthNode.children.find(node => node.name === weekFolder && node.type === 'folder');
+      if (!weekNode) {
+        weekNode = {
+          name: weekFolder,
+          type: 'folder',
+          path: `${monthFolder}/${weekFolder}`,
+          children: []
+        };
+        monthNode.children.push(weekNode);
+      }
+
+      // 오늘 파일이 이미 있는지 확인
+      const fileExists = weekNode.children.some(node => node.name === fileName);
+      if (!fileExists) {
+        // 오늘 파일 추가 (임시 파일)
+        const newFile = {
+          name: fileName,
+          type: 'file',
+          path: filePath,
+          isDraft: true
+        };
+        weekNode.children.push(newFile);
+        
+        // 생성한 파일을 자동 선택
+        setSelectedFile(newFile);
+      }
+
+      return newFiles;
+    });
+  }, []);
 
   const handleContentChange = (newContent) => {
     setContent(newContent);
@@ -99,7 +156,7 @@ const EditorPage = () => {
         <div className="editor-layout">
           <div className="file-tree-container" style={{ width: `${fileTreeWidth}px` }}>
             <FileTree 
-              files={dummyFiles} 
+              files={files} 
               onFileSelect={handleFileSelect}
               selectedFile={selectedFile}
             />
