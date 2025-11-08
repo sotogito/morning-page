@@ -1,26 +1,18 @@
 import { useState, useEffect } from 'react';
 import './EditorPanel.css';
 import { ERROR_MESSAGE } from '../../../constants/ErrorMessages';
-import { createTitle } from '../../../utils/dateTitleFormatter';
-
 
 const EditorPanel = ({
+  title = '',
+  onTitleChange,
   content = '',
   onChange,
   onTogglePreview,
   showPreview = false,
   onError,
 }) => {
-  const [title, setTitle] = useState('');
   const [charCount, setCharCount] = useState(0);
   const minCharCount = 1000;
-
-  useEffect(() => {
-    const today = new Date();
-    const formattedTitle = createTitle(today);
-    
-    setTitle(formattedTitle);
-  }, []);
 
   useEffect(() => {
     setCharCount(content.length);
@@ -39,7 +31,7 @@ const EditorPanel = ({
   };
 
   const handleTitleChange = (e) => {
-    setTitle(e.target.value);
+    onTitleChange?.(e.target.value);
   };
 
   const handleContentDelete = (e) => {

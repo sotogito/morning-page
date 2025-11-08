@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import FileTree from '../../components/editor/FileTree/FileTree';
@@ -7,15 +7,27 @@ import PreviewPanel from '../../components/editor/PreviewPanel/PreviewPanel';
 import Resizer from '../../components/common/Resizer/Resizer';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import useToast from '../../hooks/useToast';
+import { createTitle } from '../../utils/dateTitleFormatter';
 import './EditorPage.css';
 
 const EditorPage = () => {
+  const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [fileTreeWidth, setFileTreeWidth] = useState(250);
   const [previewWidth, setPreviewWidth] = useState(400);
   const [selectedFile, setSelectedFile] = useState(null);
   const { toasts, showError, showInfo, removeToast } = useToast();
+
+  // 페이지 로드 시 제목 생성 (나중에 GitHub 확인 로직 추가 예정)
+  useEffect(() => {
+    // TODO: GitHub에서 파일 목록 불러오기
+    // TODO: 오늘 날짜 파일 있는지 확인
+    // TODO: 없으면 제목 생성 + FileTree에 추가
+    
+    const todayTitle = createTitle();
+    setTitle(todayTitle);
+  }, []);
 
   // 더미 데이터
   const dummyFiles = [
@@ -30,7 +42,7 @@ const EditorPage = () => {
           path: '2024/2024-01-15.md'
         },
         {
-          name: '2024-01-16 새로운 시작.md',
+          name: '2025-11-08 새로운 시작.md',
           type: 'file',
           path: '2024/2024-01-16.md'
         }
@@ -45,6 +57,10 @@ const EditorPage = () => {
 
   const handleContentChange = (newContent) => {
     setContent(newContent);
+  };
+
+  const handleTitleChange = (newTitle) => {
+    setTitle(newTitle);
   };
 
   const handleTogglePreview = () => {
@@ -93,6 +109,8 @@ const EditorPage = () => {
           
           <div className="editor-container">
             <EditorPanel
+              title={title}
+              onTitleChange={handleTitleChange}
               content={content}
               onChange={handleContentChange}
               onTogglePreview={handleTogglePreview}

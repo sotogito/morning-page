@@ -8,7 +8,7 @@ const getWeekOfMonth = (date) => {
   return Math.ceil((dayOfMonth + firstWeekday) / 7);
 };
 
-export const createTitle = (date) => {
+export const createTitle = (date = new Date()) => {
     const month = date.getMonth() + 1;
     const weekNumber = getWeekOfMonth(date);
     const dateStr = date.toISOString().split('T')[0];
