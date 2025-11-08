@@ -14,6 +14,7 @@ const EditorPage = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [fileTreeWidth, setFileTreeWidth] = useState(250);
   const [previewWidth, setPreviewWidth] = useState(400);
+  const [selectedFile, setSelectedFile] = useState(null);
   const { toasts, showError, showInfo, removeToast } = useToast();
 
   // 더미 데이터
@@ -67,6 +68,7 @@ const EditorPage = () => {
   };
 
   const handleFileSelect = (file) => {
+    setSelectedFile(file);
     console.log('Selected file:', file);
     // TODO: 파일 내용 로드
   };
@@ -80,7 +82,11 @@ const EditorPage = () => {
       <div className="editor-page-content">
         <div className="editor-layout">
           <div className="file-tree-container" style={{ width: `${fileTreeWidth}px` }}>
-            <FileTree files={dummyFiles} onFileSelect={handleFileSelect} />
+            <FileTree 
+              files={dummyFiles} 
+              onFileSelect={handleFileSelect}
+              selectedFile={selectedFile}
+            />
           </div>
           
           <Resizer onResize={handleFileTreeResize} direction="horizontal" />

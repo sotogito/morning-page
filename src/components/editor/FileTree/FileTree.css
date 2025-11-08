@@ -46,6 +46,15 @@
   background-color: var(--color-bg-overlay);
 }
 
+.tree-item.selected {
+  background-color: var(--color-bg-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tree-item.selected .tree-name {
+  color: var(--color-text-primary);
+}
+
 .tree-icon {
   font-size: var(--font-size-xs);
   margin-right: var(--spacing-xs);

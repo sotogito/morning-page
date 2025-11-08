@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import './FileTree.css';
 
-const FileTree = ({ files = [], onFileSelect }) => {
+const FileTree = ({ 
+  files = [], 
+  onFileSelect, 
+  selectedFile = null 
+}) => {
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
   const toggleFolder = (folderPath) => {
@@ -18,11 +22,12 @@ const FileTree = ({ files = [], onFileSelect }) => {
     return items.map((item, index) => {
       const isFolder = item.type === 'folder';
       const isExpanded = expandedFolders.has(item.path);
+      const isSelected = !isFolder && selectedFile?.path === item.path;
       
       return (
         <div key={index} className="tree-item-container">
           <div
-            className={`tree-item ${!isFolder ? 'file' : ''}`}
+            className={`tree-item ${!isFolder ? 'file' : ''} ${isSelected ? 'selected' : ''}`}
             style={{ paddingLeft: `${depth * 16 + 8}px` }}
             onClick={() => {
               if (isFolder) {
@@ -64,4 +69,3 @@ const FileTree = ({ files = [], onFileSelect }) => {
 };
 
 export default FileTree;
-
