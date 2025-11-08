@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import './EditorPanel.css';
 import { ERROR_MESSAGE } from '../../../constants/ErrorMessages';
+import { createTitle } from '../../../utils/dateTitleFormatter';
 
-const EditorPanel = ({ 
-  content = '', 
-  onChange, 
+
+const EditorPanel = ({
+  content = '',
+  onChange,
   onTogglePreview,
   showPreview = false,
   onError,
@@ -14,10 +16,10 @@ const EditorPanel = ({
   const minCharCount = 1000;
 
   useEffect(() => {
-    // 기본 제목: YYYY-MM-DD 
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-    setTitle(dateStr + ' ');
+    const formattedTitle = createTitle(today);
+    
+    setTitle(formattedTitle);
   }, []);
 
   useEffect(() => {
