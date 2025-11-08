@@ -30,6 +30,18 @@ const EditorPanel = ({
     setTitle(e.target.value);
   };
 
+  const handleContentDelete = (e) => {
+    if(e.key == 'Backspace') {
+      return e.preventDefault();
+    }
+
+    const textarea = e.target;
+    const hasSelection = textarea.selectionStart !== textarea.selectionEnd;
+    if(hasSelection) {
+      e.preventDefault();
+    }
+  }
+
   const canSave = charCount >= minCharCount;
 
   return (
@@ -57,6 +69,7 @@ const EditorPanel = ({
           className="editor-textarea"
           value={content}
           onChange={handleContentChange}
+          onKeyDown={handleContentDelete}
           placeholder="글을 작성하세요..."
         />
       </div>
