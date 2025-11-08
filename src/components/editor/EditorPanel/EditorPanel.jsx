@@ -25,7 +25,15 @@ const EditorPanel = ({
   }, [content]);
 
   const handleContentChange = (e) => {
-    onChange?.(e.target.value);
+    const newContent = e.target.value;
+    
+    // 텍스트가 줄어들면 수정 방지
+    if (newContent.length < content.length) {
+      onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
+      return;
+    }
+    
+    onChange?.(newContent);
   };
 
   const handleTitleChange = (e) => {
@@ -33,19 +41,12 @@ const EditorPanel = ({
   };
 
   const handleContentDelete = (e) => {
-    if(e.key === 'Backspace') {
+    if(e.key === 'Backspace' || e.key === 'Delete') {
       e.preventDefault();
       onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
-      return;
     }
+  };
 
-    const textarea = e.target;
-    const hasSelection = textarea.selectionStart !== textarea.selectionEnd;
-    if(hasSelection) {
-      e.preventDefault();
-      onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
-    }
-  }
 
   const canSave = charCount >= minCharCount;
 
