@@ -13,6 +13,7 @@ import './EditorPage.css';
 const EditorPage = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [canSave, setCanSave] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [fileTreeWidth, setFileTreeWidth] = useState(250);
   const [previewWidth, setPreviewWidth] = useState(400);
@@ -131,6 +132,10 @@ const EditorPage = () => {
     setTitle(newTitle);
   };
 
+  const handleCanSaveChange = (canSave) => {
+    setCanSave(canSave);
+  }
+
   const handleTogglePreview = () => {
     setShowPreview(!showPreview);
   };
@@ -155,6 +160,15 @@ const EditorPage = () => {
     setSelectedFile(file);
     console.log('Selected file:', file);
     // TODO: 파일 내용 로드
+  };
+
+  const handleSave = () => {
+    // TODO: GitHub에 파일 저장 로직
+    console.log('Saving...', { title, content });
+    showInfo('저장 중...');
+    
+    // 저장 후 처리
+    // setIsReadOnly(true); // 나중에 읽기 전용 기능 추가 시
   };
 
   return (
@@ -182,10 +196,14 @@ const EditorPage = () => {
               title={title}
               onTitleChange={handleTitleChange}
               content={content}
-              onChange={handleContentChange}
+              onContentChange={handleContentChange}
+              onCanSave={handleCanSaveChange}
               onTogglePreview={handleTogglePreview}
               showPreview={showPreview}
               onError={handleErrorMessage}
+              onInfo={handleInfoMessage}
+              onSave={handleSave}
+              canSave={canSave}
             />
           </div>
 

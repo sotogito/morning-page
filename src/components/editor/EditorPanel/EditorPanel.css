@@ -111,6 +111,19 @@
   color: var(--color-text-tertiary);
 }
 
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.timer {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
 .save-button {
   padding: var(--spacing-sm) var(--spacing-lg);
   font-size: var(--font-size-sm);

@@ -1,33 +1,59 @@
 import { useState, useEffect } from 'react';
 import './EditorPanel.css';
-import { ERROR_MESSAGE } from '../../../constants/ErrorMessages';
+import { ERROR_MESSAGE } from '../../../constants/ErrorMessage';
+import { INFO_MESSAGE } from '../../../constants/InfoMessage';
 
 const EditorPanel = ({
   title = '',
   onTitleChange,
   content = '',
-  onChange,
+  onCanSave,
+  onContentChange,
   onTogglePreview,
   showPreview = false,
   onError,
+  onInfo,
+  onSave,
+  canSave = false,
 }) => {
   const [charCount, setCharCount] = useState(0);
+  const [remainingTime, setRemainingTime] = useState(5);
   const minCharCount = 1000;
 
   useEffect(() => {
     setCharCount(content.length);
   }, [content]);
 
+  useEffect(() => {
+    const canSaveNow = charCount >= minCharCount;
+    onCanSave?.(canSaveNow);
+  }, [charCount, minCharCount, onCanSave]);
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setRemainingTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerId);
+          onInfo?.(INFO_MESSAGE.WRITE_TIMEOUT);
+          onSave?.();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, []);
+
   const handleContentChange = (e) => {
     const newContent = e.target.value;
     
-    // 텍스트가 줄어들면 수정 방지
     if (newContent.length < content.length) {
       onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
       return;
     }
     
-    onChange?.(newContent);
+    onContentChange?.(newContent);
   };
 
   const handleTitleChange = (e) => {
@@ -41,8 +67,17 @@ const EditorPanel = ({
     }
   };
 
+  const handleSave = () => {
+    if (canSave) {
+      onSave?.();
+    }
+  };
 
-  const canSave = charCount >= minCharCount;
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
 
   return (
     <div className="editor-panel">
@@ -81,12 +116,16 @@ const EditorPanel = ({
           </span>
           <span className="char-limit"> / {minCharCount.toLocaleString()}자</span>
         </div>
-        <button 
-          className="save-button" 
-          disabled={!canSave}
-        >
-          저장
-        </button>
+        <div className="footer-actions">
+          <span className="timer">{formatTime(remainingTime)}</span>
+          <button 
+            className="save-button" 
+            disabled={!canSave}
+            onClick={handleSave}
+          >
+            저장
+          </button>
+        </div>
       </div>
     </div>
   );
