@@ -10,6 +10,11 @@ import useToast from '../../hooks/useToast';
 import { createTitle } from '../../utils/dateTitleFormatter';
 import './EditorPage.css';
 
+const EDITOR_MODE = Object.freeze({
+  EDITABLE: 'editable',
+  READ_ONLY: 'readOnly',
+});
+
 const EditorPage = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -20,35 +25,10 @@ const EditorPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState([]);
   const [todayFilePath, setTodayFilePath] = useState('');
+  const [editorMode, setEditorMode] = useState(EDITOR_MODE.EDITABLE);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
   const { toasts, showError, showInfo, removeToast } = useToast();
-
-  // 더미 데이터 (초기값)
-  const initialFiles = [
-    {
-      name: '2024',
-      type: 'folder',
-      path: '2024',
-      children: [
-        {
-          name: '2024-01-15 아침의 생각.md',
-          type: 'file',
-          path: '2024/2024-01-15.md'
-        },
-        {
-          name: '2025-11-08 새로운 시작.md',
-          type: 'file',
-          path: '2024/2024-01-16.md'
-        }
-      ]
-    },
-    {
-      name: '2024-11-06 오늘의 글.md',
-      type: 'file',
-      path: '2024-11-06.md'
-    }
-  ];
-
-  const [files, setFiles] = useState(initialFiles);
+  const [files, setFiles] = useState('');
 
   // 페이지 로드 시 오늘 날짜 파일 확인 및 생성
   useEffect(() => {
@@ -118,6 +98,8 @@ const EditorPage = () => {
         
         // 생성한 파일을 자동 선택
         setSelectedFile(newFile);
+        setEditorMode(EDITOR_MODE.EDITABLE);
+        setLastSavedAt(null);
       }
 
       return newFiles;
@@ -160,6 +142,11 @@ const EditorPage = () => {
     setSelectedFile(file);
     console.log('Selected file:', file);
     // TODO: 파일 내용 로드
+    setTitle(file?.title ?? file?.name?.replace(/\.md$/i, '') ?? '');
+    setContent(file?.content ?? '');
+    const isEditable = Boolean(file?.isDraft);
+    setEditorMode(isEditable ? EDITOR_MODE.EDITABLE : EDITOR_MODE.READ_ONLY);
+    setLastSavedAt(file?.savedAt ?? null);
   };
 
   const handleSave = () => {
@@ -169,6 +156,10 @@ const EditorPage = () => {
     
     // 저장 후 처리
     // setIsReadOnly(true); // 나중에 읽기 전용 기능 추가 시
+    const savedAt = new Date().toISOString();
+    setLastSavedAt(savedAt);
+    setEditorMode(EDITOR_MODE.READ_ONLY);
+    setCanSave(false);
   };
 
   return (
@@ -204,6 +195,8 @@ const EditorPage = () => {
               onInfo={handleInfoMessage}
               onSave={handleSave}
               canSave={canSave}
+              isReadOnly={editorMode === EDITOR_MODE.READ_ONLY}
+              savedAt={lastSavedAt}
             />
           </div>
 
