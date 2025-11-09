@@ -17,7 +17,7 @@ const EditorPanel = ({
   canSave = false,
 }) => {
   const [charCount, setCharCount] = useState(0);
-  const [remainingTime, setRemainingTime] = useState(5);
+  const [remainingTime, setRemainingTime] = useState(1800);
   const minCharCount = 1000;
 
   useEffect(() => {
