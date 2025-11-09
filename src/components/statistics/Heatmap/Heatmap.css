@@ -1,0 +1,128 @@
+.heatmap-calendar {
+  padding: var(--spacing-xl);
+  background-color: var(--color-bg-primary);
+}
+
+.heatmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.heatmap-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.legend-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.legend-item {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid var(--color-border-secondary);
+}
+
+.heatmap-container {
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-secondary);
+}
+
+.heatmap-months {
+  position: relative;
+  height: 20px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.month-label {
+  position: absolute;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.heatmap-days {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 2px;
+}
+
+.day-label {
+  height: 11px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: 11px;
+}
+
+.heatmap-weeks {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.heatmap-week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.heatmap-day {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: 1px solid var(--color-border-secondary);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.heatmap-day:hover {
+  transform: scale(1.2);
+  outline: 1px solid var(--color-text-secondary);
+  outline-offset: 1px;
+}
+
+/* 기여도 레벨 색상 - GitHub 스타일 (흑백) */
+.heatmap-day.level-0 {
+  background-color: #ebedf0;
+}
+
+.heatmap-day.level-1 {
+  background-color: #c6cbd1;
+  border-color: #c6cbd1;
+}
+
+.heatmap-day.level-2 {
+  background-color: #959da5;
+  border-color: #959da5;
+}
+
+.heatmap-day.level-3 {
+  background-color: #6a737d;
+  border-color: #6a737d;
+}
+
+.heatmap-day.level-4 {
+  background-color: #24292f;
+  border-color: #24292f;
+}
+
