@@ -23,7 +23,7 @@ const EditorPanel = ({
   const minCharCount = 1000;
 
   useEffect(() => {
-    setCharCount(content.length);
+    setCharCount(content?.length || 0);
   }, [content]);
 
   useEffect(() => {
@@ -63,8 +63,9 @@ const EditorPanel = ({
     }
 
     const newContent = e.target.value;
+    const currentLength = content?.length || 0;
     
-    if (newContent.length < content.length) {
+    if (newContent.length < currentLength) {
       onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
       return;
     }
@@ -126,7 +127,7 @@ const EditorPanel = ({
         <input
           type="text"
           className={`editor-title ${isReadOnly ? 'read-only' : ''}`}
-          value={title}
+          value={title || ''}
           onChange={handleTitleChange}
           placeholder="제목을 입력하세요"
           disabled={isReadOnly}
@@ -144,7 +145,7 @@ const EditorPanel = ({
       <div className="editor-body">
         <textarea
           className={`editor-textarea ${isReadOnly ? 'read-only' : ''}`}
-          value={content}
+          value={content || ''}
           onChange={handleContentChange}
           onKeyDown={handleContentDelete}
           placeholder="글을 작성하세요..."

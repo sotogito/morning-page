@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import FileTree from '../../components/editor/FileTree/FileTree';
@@ -7,6 +8,8 @@ import PreviewPanel from '../../components/editor/PreviewPanel/PreviewPanel';
 import Resizer from '../../components/common/Resizer/Resizer';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import useToast from '../../hooks/useToast';
+import { useAuthStore } from '../../store/authStore';
+import { GitHubFileService } from '../../services/githubFileService';
 import { createTitle } from '../../utils/dateTitleFormatter';
 import './EditorPage.css';
 
@@ -15,7 +18,74 @@ const EDITOR_MODE = Object.freeze({
   READ_ONLY: 'readOnly',
 });
 
+const findFileInTree = (nodes, datePrefix) => {
+  for (const node of nodes) {
+    if (node.type === 'file' && node.name.includes(datePrefix)) {
+      return node;
+    }
+
+    if (node.type === 'folder' && node.children?.length) {
+      const found = findFileInTree(node.children, datePrefix);
+      if (found) return found;
+    }
+  }
+
+  return null;
+};
+
+const cloneTreeNodes = (nodes) =>
+  nodes.map(node => ({
+    ...node,
+    children: node.children ? cloneTreeNodes(node.children) : undefined
+  }));
+
+const addFileToTree = (nodes, monthFolder, weekFolder, fileNode) => {
+  const tree = cloneTreeNodes(nodes);
+
+  let monthNode = tree.find(node => node.type === 'folder' && node.name === monthFolder);
+  if (!monthNode) {
+    monthNode = {
+      name: monthFolder,
+      type: 'folder',
+      path: monthFolder,
+      children: []
+    };
+    tree.push(monthNode);
+  } else if (!monthNode.children) {
+    monthNode.children = [];
+  } else {
+    monthNode.children = [...monthNode.children];
+  }
+
+  const weekPath = `${monthFolder}/${weekFolder}`;
+  let weekNode = monthNode.children.find(node => node.type === 'folder' && node.name === weekFolder);
+  if (!weekNode) {
+    weekNode = {
+      name: weekFolder,
+      type: 'folder',
+      path: weekPath,
+      children: []
+    };
+    monthNode.children.push(weekNode);
+  } else if (!weekNode.children) {
+    weekNode.children = [];
+  } else {
+    weekNode.children = [...weekNode.children];
+  }
+
+  const exists = weekNode.children.some(node => node.path === fileNode.path);
+  if (!exists) {
+    weekNode.children.push(fileNode);
+  }
+
+  return tree;
+};
+
 const EditorPage = () => {
+  const navigate = useNavigate();
+  const { user, token, owner, repo, isAuthenticated } = useAuthStore();
+  const { toasts, showError, showInfo, removeToast } = useToast();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [canSave, setCanSave] = useState(false);
@@ -25,86 +95,64 @@ const EditorPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState([]);
   const [todayFilePath, setTodayFilePath] = useState('');
+  const [todayDatePrefix, setTodayDatePrefix] = useState('');
   const [editorMode, setEditorMode] = useState(EDITOR_MODE.EDITABLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const { toasts, showError, showInfo, removeToast } = useToast();
-  const [files, setFiles] = useState('');
+  const [files, setFiles] = useState([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
 
-  // 페이지 로드 시 오늘 날짜 파일 확인 및 생성
   useEffect(() => {
-    // TODO: GitHub에서 파일 목록 불러오기
-    // TODO: 오늘 날짜 파일 있는지 확인
-    
-    // 현재는 오늘 파일이 없다고 가정하고 생성
-    const todayTitle = createTitle();
-    setTitle(todayTitle);
+    if (!isAuthenticated || !token) {
+      navigate('/login');
+      return;
+    }
 
-    // 제목에서 경로 파싱: "11월/2째주/2025-11-08 "
-    const parts = todayTitle.trim().split('/');
-    const monthFolder = parts[0]; // "11월"
-    const weekFolder = parts[1];  // "2째주"
-    const dateStr = parts[2];     // "2025-11-08"
-    const fileName = `${dateStr}.md`;
-    const filePath = `${monthFolder}/${weekFolder}/${fileName}`;
-    
-    // 오늘 파일 경로 저장
-    setTodayFilePath(filePath);
+    const loadFiles = async () => {
+      setIsLoadingFiles(true);
+      try {
+        const fileService = new GitHubFileService(token, owner, repo);
+        const mdFiles = await fileService.fetchAllMarkdownFiles();
+        const fileTree = fileService.buildFileTree(mdFiles);
+        const { monthFolder, weekFolder, today, filePath } = createTitle();
 
-    const foldersToExpand = [
-      monthFolder,
-      `${monthFolder}/${weekFolder}`
-    ];
-    setExpandedFolders(foldersToExpand);
-
-    // 파일 추가 로직
-    setFiles(prevFiles => {
-      const newFiles = [...prevFiles];
-      
-      // 월 폴더 찾기 또는 생성
-      let monthNode = newFiles.find(node => node.name === monthFolder && node.type === 'folder');
-      if (!monthNode) {
-        monthNode = {
-          name: monthFolder,
-          type: 'folder',
-          path: monthFolder,
-          children: []
-        };
-        newFiles.push(monthNode);
-      }
-
-      // 주차 폴더 찾기 또는 생성
-      let weekNode = monthNode.children.find(node => node.name === weekFolder && node.type === 'folder');
-      if (!weekNode) {
-        weekNode = {
-          name: weekFolder,
-          type: 'folder',
-          path: `${monthFolder}/${weekFolder}`,
-          children: []
-        };
-        monthNode.children.push(weekNode);
-      }
-
-      // 오늘 파일이 이미 있는지 확인
-      const fileExists = weekNode.children.some(node => node.name === fileName);
-      if (!fileExists) {
-        // 오늘 파일 추가 (임시 파일)
-        const newFile = {
-          name: fileName,
-          type: 'file',
-          path: filePath,
-          isDraft: true
-        };
-        weekNode.children.push(newFile);
+        const foldersToExpand = [
+          monthFolder,
+          `${monthFolder}/${weekFolder}`
+        ];
+        setExpandedFolders(foldersToExpand);
+        setTodayFilePath(filePath);
+        setTodayDatePrefix(today);
         
-        // 생성한 파일을 자동 선택
-        setSelectedFile(newFile);
-        setEditorMode(EDITOR_MODE.EDITABLE);
-        setLastSavedAt(null);
-      }
+        // 방금 만든 fileTree에서 오늘 파일 찾기 (날짜로)
+        const todayFile = findFileInTree(fileTree, today);
+        
+        let nextTree = fileTree;
 
-      return newFiles;
-    });
-  }, []);
+        if (todayFile) {
+          await handleFileSelect(todayFile);
+        } else {
+          const fileName = `${today}.md`;
+          const newFile = {
+              name: fileName,
+              type: 'file',
+              path: filePath,
+              isDraft: true
+          };
+          await handleFileSelect(newFile);
+          nextTree = addFileToTree(fileTree, monthFolder, weekFolder, newFile);
+        }
+
+        setFiles(nextTree);
+      } catch (error) {
+        console.error('Failed to load files:', error);
+        showError('파일 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    };
+
+    loadFiles();
+  }, [isAuthenticated, token, owner, repo, navigate, showError]);
 
   const handleContentChange = (newContent) => {
     setContent(newContent);
@@ -138,45 +186,83 @@ const EditorPage = () => {
     setPreviewWidth(prev => Math.max(300, Math.min(800, prev - delta)));
   };
 
-  const handleFileSelect = (file) => {
+  const handleFileSelect = async (file) => {
     setSelectedFile(file);
-    console.log('Selected file:', file);
-    // TODO: 파일 내용 로드
-    setTitle(file?.title ?? file?.name?.replace(/\.md$/i, '') ?? '');
-    setContent(file?.content ?? '');
-    const isEditable = Boolean(file?.isDraft);
-    setEditorMode(isEditable ? EDITOR_MODE.EDITABLE : EDITOR_MODE.READ_ONLY);
-    setLastSavedAt(file?.savedAt ?? null);
+    
+    if (file.isDraft) {
+      setEditorMode(EDITOR_MODE.EDITABLE);
+      setTitle(file.path.replace('.md', ' '));
+      setContent('');
+      setLastSavedAt(null);
+      return;
+    }
+
+    try {
+      const fileService = new GitHubFileService(token, owner, repo);
+      const fileWithContent = await fileService.fetchFileContent(file.path);
+      const lastCommit = await fileService.getLastCommitTime(file.path);
+      
+      setEditorMode(EDITOR_MODE.READ_ONLY);
+      setTitle(file.path.replace('.md', ''));
+      setContent(fileWithContent.content);
+      setLastSavedAt(lastCommit);
+    } catch (error) {
+      console.error('Failed to load file:', error);
+      showError('파일을 불러오는데 실패했습니다.');
+    }
   };
 
-  const handleSave = () => {
-    // TODO: GitHub에 파일 저장 로직
-    console.log('Saving...', { title, content });
+  const handleSave = async (force = false) => {
+    // 강제 저장이 아니고 저장 불가능 상태면 리턴
+    if (!force && !canSave) return;
+    
     showInfo('저장 중...');
     
-    // 저장 후 처리
-    // setIsReadOnly(true); // 나중에 읽기 전용 기능 추가 시
-    const savedAt = new Date().toISOString();
-    setLastSavedAt(savedAt);
-    setEditorMode(EDITOR_MODE.READ_ONLY);
-    setCanSave(false);
+    try {
+      const fileService = new GitHubFileService(token, owner, repo);
+      
+      // 제목 trim 처리
+      const trimmedTitle = title.trim();
+      const finalFilePath = `${trimmedTitle}.md`;
+      const commitMessage = `Add morning page: ${trimmedTitle}`;
+      
+      // 파일 저장 (신규 또는 업데이트)
+      const sha = selectedFile?.sha || null;
+      await fileService.saveFile(finalFilePath, content, commitMessage, sha);
+      
+      const savedAt = new Date().toISOString();
+      setLastSavedAt(savedAt);
+      setEditorMode(EDITOR_MODE.READ_ONLY);
+      setCanSave(false);
+      
+      showInfo('저장 완료!');
+      
+      // 파일 목록 다시 로드
+      const mdFiles = await fileService.fetchAllMarkdownFiles();
+      const fileTree = fileService.buildFileTree(mdFiles);
+      setFiles(fileTree);
+    } catch (error) {
+      console.error('Failed to save file:', error);
+      showError('파일 저장에 실패했습니다.');
+    }
   };
 
   return (
     <div className="editor-page">
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      <Header username="username" repository="morningpage" />
+      <Header username={user?.name || user?.login || 'User'} repository={repo || 'repository'} />
       <TabNavigation />
       
       <div className="editor-page-content">
         <div className="editor-layout">
           <div className="file-tree-container" style={{ width: `${fileTreeWidth}px` }}>
-            <FileTree 
+          <FileTree 
               files={files} 
               onFileSelect={handleFileSelect}
               selectedFile={selectedFile}
               initialExpandedFolders={expandedFolders}
               todayFilePath={todayFilePath}
+              todayDatePrefix={todayDatePrefix}
             />
           </div>
           
