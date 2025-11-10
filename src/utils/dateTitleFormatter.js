@@ -11,7 +11,16 @@ const getWeekOfMonth = (date) => {
 export const createTitle = (date = new Date()) => {
     const month = date.getMonth() + 1;
     const weekNumber = getWeekOfMonth(date);
-    const dateStr = date.toISOString().split('T')[0];
+    const today = date.toISOString().split('T')[0];
 
-    return `${month}월/${weekNumber}째주/${dateStr} `;
+    const monthFolder = `${month}월`;
+    const weekFolder = `${weekNumber}째주`;
+    const filePath = `${monthFolder}/${weekFolder}/${today}.md`;
+
+    return {
+      monthFolder,
+      weekFolder,
+      today,
+      filePath
+    }
 }
