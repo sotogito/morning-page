@@ -78,7 +78,16 @@ const addFileToTree = (nodes, monthFolder, weekFolder, fileNode) => {
     weekNode.children.push(fileNode);
   }
 
-  return tree;
+  return sortTreeDescending(tree);
+};
+
+const sortTreeDescending = (nodes) => {
+  const sorted = [...nodes].sort((a, b) => b.name.localeCompare(a.name, 'ko-KR'));
+
+  return sorted.map(node => ({
+    ...node,
+    children: node.children ? sortTreeDescending(node.children) : node.children
+  }));
 };
 
 const EditorPage = () => {
@@ -142,7 +151,7 @@ const EditorPage = () => {
           nextTree = addFileToTree(fileTree, monthFolder, weekFolder, newFile);
         }
 
-        setFiles(nextTree);
+        setSortedFileTree(nextTree);
       } catch (error) {
         console.error('Failed to load files:', error);
         showError('파일 목록을 불러오는데 실패했습니다.');
@@ -153,6 +162,11 @@ const EditorPage = () => {
 
     loadFiles();
   }, [isAuthenticated, token, owner, repo, navigate, showError]);
+
+
+  const setSortedFileTree = (files) => {
+    setFiles(sortTreeDescending(files));
+  }
 
   const handleContentChange = (newContent) => {
     setContent(newContent);
@@ -240,7 +254,7 @@ const EditorPage = () => {
       // 파일 목록 다시 로드
       const mdFiles = await fileService.fetchAllMarkdownFiles();
       const fileTree = fileService.buildFileTree(mdFiles);
-      setFiles(fileTree);
+      setSortedFileTree(fileTree);
     } catch (error) {
       console.error('Failed to save file:', error);
       showError('파일 저장에 실패했습니다.');
