@@ -9,6 +9,7 @@ import Resizer from '../../components/common/Resizer/Resizer';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import useToast from '../../hooks/useToast';
 import { useAuthStore } from '../../store/authStore';
+import { useFileStore } from '../../store/fileStore';
 import { GitHubFileService } from '../../services/githubFileService';
 import { createTitle } from '../../utils/dateTitleFormatter';
 import './EditorPage.css';
@@ -17,21 +18,6 @@ const EDITOR_MODE = Object.freeze({
   EDITABLE: 'editable',
   READ_ONLY: 'readOnly',
 });
-
-const findFileInTree = (nodes, datePrefix) => {
-  for (const node of nodes) {
-    if (node.type === 'file' && node.name.includes(datePrefix)) {
-      return node;
-    }
-
-    if (node.type === 'folder' && node.children?.length) {
-      const found = findFileInTree(node.children, datePrefix);
-      if (found) return found;
-    }
-  }
-
-  return null;
-};
 
 const cloneTreeNodes = (nodes) =>
   nodes.map(node => ({
@@ -108,6 +94,7 @@ const sortTreeDescending = (nodes) => {
 const EditorPage = () => {
   const navigate = useNavigate();
   const { user, token, owner, repo, isAuthenticated } = useAuthStore();
+  const { setFiles: setFileStore, findFileByDate, getFile, updateFile, addFile } = useFileStore();
   const { toasts, showError, showInfo, removeToast } = useToast();
 
   const [title, setTitle] = useState('');
@@ -136,6 +123,10 @@ const EditorPage = () => {
       try {
         const fileService = new GitHubFileService(token, owner, repo);
         const mdFiles = await fileService.fetchAllMarkdownFiles();
+        
+        // fileStore에 GithubFile[] 저장
+        setFileStore(mdFiles);
+        
         const fileTree = fileService.buildFileTree(mdFiles);
         const { monthFolder, weekFolder, today, filePath } = createTitle();
 
@@ -147,20 +138,21 @@ const EditorPage = () => {
         setTodayFilePath(filePath);
         setTodayDatePrefix(today);
         
-        // 방금 만든 fileTree에서 오늘 파일 찾기 (날짜로)
-        const todayFile = findFileInTree(fileTree, today);
+        // fileStore에서 오늘 파일 찾기 (날짜로)
+        const todayFile = findFileByDate(today);
         
         let nextTree = fileTree;
 
         if (todayFile) {
           await handleFileSelect(todayFile);
         } else {
+
           const fileName = `${today}.md`;
           const newFile = {
               name: fileName,
               type: 'file',
               path: filePath,
-              isDraft: true
+              sha: null  // sha가 없으면 draft
           };
           await handleFileSelect(newFile);
           nextTree = addFileToTree(fileTree, monthFolder, weekFolder, newFile);
@@ -215,26 +207,59 @@ const EditorPage = () => {
     setPreviewWidth(prev => Math.max(300, Math.min(800, prev - delta)));
   };
 
+  // 에디터 상태 설정 헬퍼
+  const setEditorState = ({ mode, title, content, savedAt }) => {
+    setEditorMode(mode);
+    setTitle(title);
+    setContent(content);
+    setLastSavedAt(savedAt);
+  };
+
   const handleFileSelect = async (file) => {
     setSelectedFile(file);
     
-    if (file.isDraft) {
-      setEditorMode(EDITOR_MODE.EDITABLE);
-      setTitle(file.path.replace('.md', ' '));
-      setContent('');
-      setLastSavedAt(null);
+    // sha가 없으면 draft (새 파일)
+    if (!file.sha) {
+      setEditorState({
+        mode: EDITOR_MODE.EDITABLE,
+        title: file.path.replace('.md', ' '),
+        content: '',
+        savedAt: null
+      });
       return;
     }
 
+    // sha가 있으면 저장된 파일 (read-only)
+    // 1. fileStore에서 먼저 확인
+    const cachedFile = getFile(file.path);
+    if (cachedFile?.content) {
+      // 캐시에 content가 있으면 바로 표시
+      setEditorState({
+        mode: EDITOR_MODE.READ_ONLY,
+        title: file.path.replace('.md', ''),
+        content: cachedFile.content,
+        savedAt: cachedFile.savedAt || null
+      });
+      return;
+    }
+
+    // 2. 캐시에 없으면 API 호출
     try {
       const fileService = new GitHubFileService(token, owner, repo);
       const fileWithContent = await fileService.fetchFileContent(file.path);
       const lastCommit = await fileService.getLastCommitTime(file.path);
+      // fileStore에 content 저장
+      updateFile(file.path, {
+        content: fileWithContent.content,
+        savedAt: lastCommit
+      });
       
-      setEditorMode(EDITOR_MODE.READ_ONLY);
-      setTitle(file.path.replace('.md', ''));
-      setContent(fileWithContent.content);
-      setLastSavedAt(lastCommit);
+      setEditorState({
+        mode: EDITOR_MODE.READ_ONLY,
+        title: file.path.replace('.md', ''),
+        content: fileWithContent.content,
+        savedAt: lastCommit
+      });
     } catch (error) {
       console.error('Failed to load file:', error);
       showError('파일을 불러오는데 실패했습니다.');
@@ -257,32 +282,57 @@ const EditorPage = () => {
       
       // 파일 저장 (신규 또는 업데이트)
       const sha = selectedFile?.sha || null;
-      await fileService.saveFile(finalFilePath, content, commitMessage, sha);
+      const response = await fileService.saveFile(finalFilePath, content, commitMessage, sha);
       
       const savedAt = new Date().toISOString();
+      const fileName = finalFilePath.split('/').pop();
+      
+      // fileStore에 파일 추가/업데이트
+      const savedFileData = {
+        name: fileName,
+        path: finalFilePath,
+        sha: response?.content?.sha || 'saved',
+        content: content,
+        savedAt: savedAt,
+        downloadUrl: response?.content?.download_url || null
+      };
+      
+      if (!selectedFile?.sha) {
+        // 신규 파일 - addFile
+        addFile(savedFileData);
+      } else {
+        // 기존 파일 - updateFile
+        updateFile(finalFilePath, savedFileData);
+      }
+      
+      // UI 상태 업데이트
       setLastSavedAt(savedAt);
       setEditorMode(EDITOR_MODE.READ_ONLY);
       setCanSave(false);
       
-      // 트리에서 파일 정보 업데이트
-      const fileName = finalFilePath.split('/').pop();
+      // 트리에서 파일 정보 업데이트 (이름과 sha만)
       const updatedFile = {
         name: fileName,
         path: finalFilePath,
-        isDraft: false,
+        sha: savedFileData.sha,
         savedAt: savedAt
       };
       
       const updatedTree = updateFileInTree(files, selectedFile.path, updatedFile);
       setSortedFileTree(updatedTree);
       
-      // selectedFile도 업데이트
+      // selectedFile 업데이트
       setSelectedFile({ ...selectedFile, ...updatedFile });
       
       showInfo('저장 완료!');
     } catch (error) {
       console.error('Failed to save file:', error);
-      showError('파일 저장에 실패했습니다.');
+      showError('파일 저장에 실패했습니다. 페이지를 새로고침합니다.');
+      
+      // 저장 실패 시 전체 리로드로 데이터 정합성 보장
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   };
 
