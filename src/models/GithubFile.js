@@ -70,7 +70,7 @@ export class GithubFile {
   }
 
   /**
-   * 날짜로 정렬하기 위한 비교 함수
+   * 날짜로 정렬하기 위한 비교 함수 - 최신순
    * @param {GithubFile} a
    * @param {GithubFile} b
    * @returns {number}
@@ -81,6 +81,6 @@ export class GithubFile {
     
     if (!dateA || !dateB) return 0;
     
-    return dateB.localeCompare(dateA); // 최신순
+    return dateB.localeCompare(dateA);
   }
 }
