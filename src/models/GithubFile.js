@@ -1,13 +1,11 @@
 export class GithubFile {
-  constructor({ name, path, sha, type, downloadUrl, content, savedAt, children }) {
+  constructor({ name, path, sha, downloadUrl, content, savedAt }) {
     this.name = name;
     this.path = path;
     this.sha = sha;
-    this.type = type;
     this.downloadUrl = downloadUrl;
     this.content = content;
     this.savedAt = savedAt;
-    this.children = children || [];
   }
 
   /**
@@ -20,16 +18,14 @@ export class GithubFile {
       name: apiResponse.name,
       path: apiResponse.path,
       sha: apiResponse.sha,
-      type: apiResponse.type === 'dir' ? 'folder' : 'file',
       downloadUrl: apiResponse.download_url,
       content: null,
       savedAt: null,
-      children: [],
     });
   }
 
   isMarkdown() {
-    return this.type === 'file' && this.name.endsWith('.md');
+    return this.name.endsWith('.md');
   }
 
   isDatePattern() {
@@ -58,28 +54,6 @@ export class GithubFile {
       this.content = '';
       return this.content;
     }
-  }
-
-  isFolder() {
-    return this.type === 'folder';
-  }
-
-  isFile() {
-    return this.type === 'file';
-  }
-
-  /**
-   * 파일 트리 구조로 변환 (FileTree 컴포넌트용)
-   */
-  toFileTreeNode() {
-    return {
-      name: this.name,
-      type: this.type,
-      path: this.path,
-      children: this.children.map(child => child.toFileTreeNode()),
-      sha: this.sha,
-      savedAt: this.savedAt,
-    };
   }
 
   /**

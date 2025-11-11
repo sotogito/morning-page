@@ -27,13 +27,14 @@ export class GitHubFileService {
       const files = [];
 
       for (const item of contents) {
-        const githubFile = GithubFile.fromGitHubAPI(item);
-
-        if (githubFile.isFolder()) {
+        if (item.type === 'dir') {
           const childFiles = await this.fetchAllMarkdownFiles(item.path);
           files.push(...childFiles);
-        } else if (githubFile.isMarkdown() && githubFile.isDatePattern()) {
-          files.push(githubFile);
+        } else {
+          const githubFile = GithubFile.fromGitHubAPI(item);
+          if (githubFile.isMarkdown() && githubFile.isDatePattern()) {
+            files.push(githubFile);
+          }
         }
       }
 
