@@ -39,6 +39,21 @@ const cloneTreeNodes = (nodes) =>
     children: node.children ? cloneTreeNodes(node.children) : undefined
   }));
 
+const updateFileInTree = (nodes, oldPath, newFile) => {
+  return nodes.map(node => {
+    if (node.type === 'folder' && node.children) {
+      return {
+        ...node,
+        children: node.children.map(child => 
+          child.path === oldPath ? { ...child, ...newFile } : 
+          child.type === 'folder' ? updateFileInTree([child], oldPath, newFile)[0] : child
+        )
+      };
+    }
+    return node;
+  });
+};
+
 const addFileToTree = (nodes, monthFolder, weekFolder, fileNode) => {
   const tree = cloneTreeNodes(nodes);
 
@@ -249,12 +264,22 @@ const EditorPage = () => {
       setEditorMode(EDITOR_MODE.READ_ONLY);
       setCanSave(false);
       
-      showInfo('저장 완료!');
+      // 트리에서 파일 정보 업데이트
+      const fileName = finalFilePath.split('/').pop();
+      const updatedFile = {
+        name: fileName,
+        path: finalFilePath,
+        isDraft: false,
+        savedAt: savedAt
+      };
       
-      // 파일 목록 다시 로드
-      const mdFiles = await fileService.fetchAllMarkdownFiles();
-      const fileTree = fileService.buildFileTree(mdFiles);
-      setSortedFileTree(fileTree);
+      const updatedTree = updateFileInTree(files, selectedFile.path, updatedFile);
+      setSortedFileTree(updatedTree);
+      
+      // selectedFile도 업데이트
+      setSelectedFile({ ...selectedFile, ...updatedFile });
+      
+      showInfo('저장 완료!');
     } catch (error) {
       console.error('Failed to save file:', error);
       showError('파일 저장에 실패했습니다.');
