@@ -19,82 +19,17 @@ const EDITOR_MODE = Object.freeze({
   READ_ONLY: 'readOnly',
 });
 
-const cloneTreeNodes = (nodes) =>
-  nodes.map(node => ({
-    ...node,
-    children: node.children ? cloneTreeNodes(node.children) : undefined
-  }));
-
-const updateFileInTree = (nodes, oldPath, newFile) => {
-  return nodes.map(node => {
-    if (node.type === 'folder' && node.children) {
-      return {
-        ...node,
-        children: node.children.map(child => 
-          child.path === oldPath ? { ...child, ...newFile } : 
-          child.type === 'folder' ? updateFileInTree([child], oldPath, newFile)[0] : child
-        )
-      };
-    }
-    return node;
-  });
-};
-
-const addFileToTree = (nodes, monthFolder, weekFolder, fileNode) => {
-  const tree = cloneTreeNodes(nodes);
-
-  let monthNode = tree.find(node => node.type === 'folder' && node.name === monthFolder);
-  if (!monthNode) {
-    monthNode = {
-      name: monthFolder,
-      type: 'folder',
-      path: monthFolder,
-      children: []
-    };
-    tree.push(monthNode);
-  } else if (!monthNode.children) {
-    monthNode.children = [];
-  } else {
-    monthNode.children = [...monthNode.children];
-  }
-
-  const weekPath = `${monthFolder}/${weekFolder}`;
-  let weekNode = monthNode.children.find(node => node.type === 'folder' && node.name === weekFolder);
-  if (!weekNode) {
-    weekNode = {
-      name: weekFolder,
-      type: 'folder',
-      path: weekPath,
-      children: []
-    };
-    monthNode.children.push(weekNode);
-  } else if (!weekNode.children) {
-    weekNode.children = [];
-  } else {
-    weekNode.children = [...weekNode.children];
-  }
-
-  const exists = weekNode.children.some(node => node.path === fileNode.path);
-  if (!exists) {
-    weekNode.children.push(fileNode);
-  }
-
-  return sortTreeDescending(tree);
-};
-
-const sortTreeDescending = (nodes) => {
-  const sorted = [...nodes].sort((a, b) => b.name.localeCompare(a.name, 'ko-KR'));
-
-  return sorted.map(node => ({
-    ...node,
-    children: node.children ? sortTreeDescending(node.children) : node.children
-  }));
-};
-
 const EditorPage = () => {
   const navigate = useNavigate();
   const { user, token, owner, repo, isAuthenticated } = useAuthStore();
-  const { setFiles: setFileStore, findFileByDate, getFile, updateFile, addFile } = useFileStore();
+  const { 
+    setFiles: setFileStore, 
+    getAllFiles, 
+    findFileByDate, 
+    getFile, 
+    updateFile, 
+    addFile 
+  } = useFileStore();
   const { toasts, showError, showInfo, removeToast } = useToast();
 
   const [title, setTitle] = useState('');
@@ -109,8 +44,10 @@ const EditorPage = () => {
   const [todayDatePrefix, setTodayDatePrefix] = useState('');
   const [editorMode, setEditorMode] = useState(EDITOR_MODE.EDITABLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [files, setFiles] = useState([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  
+  // fileStore에서 파일 목록 가져오기
+  const files = getAllFiles();
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
@@ -127,7 +64,6 @@ const EditorPage = () => {
         // fileStore에 GithubFile[] 저장
         setFileStore(mdFiles);
         
-        const fileTree = fileService.buildFileTree(mdFiles);
         const { monthFolder, weekFolder, today, filePath } = createTitle();
 
         const foldersToExpand = [
@@ -141,24 +77,25 @@ const EditorPage = () => {
         // fileStore에서 오늘 파일 찾기 (날짜로)
         const todayFile = findFileByDate(today);
         
-        let nextTree = fileTree;
-
         if (todayFile) {
+          // 오늘 파일이 있으면 선택
           await handleFileSelect(todayFile);
         } else {
-
+          // 오늘 파일이 없으면 draft 생성
           const fileName = `${today}.md`;
           const newFile = {
               name: fileName,
-              type: 'file',
               path: filePath,
-              sha: null  // sha가 없으면 draft
+              sha: null,  // sha가 없으면 draft
+              downloadUrl: null,
+              content: null,
+              savedAt: null
           };
+          
+          // fileStore에 draft 추가
+          addFile(newFile);
           await handleFileSelect(newFile);
-          nextTree = addFileToTree(fileTree, monthFolder, weekFolder, newFile);
         }
-
-        setSortedFileTree(nextTree);
       } catch (error) {
         console.error('Failed to load files:', error);
         showError('파일 목록을 불러오는데 실패했습니다.');
@@ -169,11 +106,6 @@ const EditorPage = () => {
 
     loadFiles();
   }, [isAuthenticated, token, owner, repo, navigate, showError]);
-
-
-  const setSortedFileTree = (files) => {
-    setFiles(sortTreeDescending(files));
-  }
 
   const handleContentChange = (newContent) => {
     setContent(newContent);
@@ -207,7 +139,6 @@ const EditorPage = () => {
     setPreviewWidth(prev => Math.max(300, Math.min(800, prev - delta)));
   };
 
-  // 에디터 상태 설정 헬퍼
   const setEditorState = ({ mode, title, content, savedAt }) => {
     setEditorMode(mode);
     setTitle(title);
@@ -218,7 +149,6 @@ const EditorPage = () => {
   const handleFileSelect = async (file) => {
     setSelectedFile(file);
     
-    // sha가 없으면 draft (새 파일)
     if (!file.sha) {
       setEditorState({
         mode: EDITOR_MODE.EDITABLE,
@@ -229,11 +159,8 @@ const EditorPage = () => {
       return;
     }
 
-    // sha가 있으면 저장된 파일 (read-only)
-    // 1. fileStore에서 먼저 확인
     const cachedFile = getFile(file.path);
     if (cachedFile?.content) {
-      // 캐시에 content가 있으면 바로 표시
       setEditorState({
         mode: EDITOR_MODE.READ_ONLY,
         title: file.path.replace('.md', ''),
@@ -243,12 +170,11 @@ const EditorPage = () => {
       return;
     }
 
-    // 2. 캐시에 없으면 API 호출
     try {
       const fileService = new GitHubFileService(token, owner, repo);
       const fileWithContent = await fileService.fetchFileContent(file.path);
       const lastCommit = await fileService.getLastCommitTime(file.path);
-      // fileStore에 content 저장
+
       updateFile(file.path, {
         content: fileWithContent.content,
         savedAt: lastCommit
@@ -297,11 +223,13 @@ const EditorPage = () => {
         downloadUrl: response?.content?.download_url || null
       };
       
-      if (!selectedFile?.sha) {
-        // 신규 파일 - addFile
+      // 경로가 변경되었으면 (draft → 실제 파일명) 기존 파일 제거 후 새로 추가
+      if (selectedFile.path !== finalFilePath) {
+        const { removeFile } = useFileStore.getState();
+        removeFile(selectedFile.path);
         addFile(savedFileData);
       } else {
-        // 기존 파일 - updateFile
+        // 경로가 같으면 업데이트
         updateFile(finalFilePath, savedFileData);
       }
       
@@ -310,19 +238,8 @@ const EditorPage = () => {
       setEditorMode(EDITOR_MODE.READ_ONLY);
       setCanSave(false);
       
-      // 트리에서 파일 정보 업데이트 (이름과 sha만)
-      const updatedFile = {
-        name: fileName,
-        path: finalFilePath,
-        sha: savedFileData.sha,
-        savedAt: savedAt
-      };
-      
-      const updatedTree = updateFileInTree(files, selectedFile.path, updatedFile);
-      setSortedFileTree(updatedTree);
-      
       // selectedFile 업데이트
-      setSelectedFile({ ...selectedFile, ...updatedFile });
+      setSelectedFile({ ...selectedFile, name: fileName, path: finalFilePath, sha: savedFileData.sha, savedAt });
       
       showInfo('저장 완료!');
     } catch (error) {

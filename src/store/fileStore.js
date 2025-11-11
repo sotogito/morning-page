@@ -15,6 +15,10 @@ export const useFileStore = create((set, get) => ({
     return get().files.get(path);
   },
 
+  getAllFiles: () => {
+    return Array.from(get().files.values());
+  },
+
   addFile: (githubFile) => {
     set((state) => {
       const newFiles = new Map(state.files);
