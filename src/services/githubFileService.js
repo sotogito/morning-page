@@ -72,68 +72,6 @@ export class GitHubFileService {
   }
 
   /**
-   * 파일 목록을 폴더 구조로 변환 (FileTree용)
-   * @param {GithubFile[]} files - 파일 목록
-   * @returns {Object[]} - 폴더 구조
-   */
-  buildFileTree(files) {
-    const tree = [];
-    const folderMap = new Map();
-
-    // 날짜순 정렬 (최신순)
-    const sortedFiles = files.sort(GithubFile.compareByDate);
-
-    sortedFiles.forEach(file => {
-      const parts = file.path.split('/');
-      const fileName = parts.pop();
-      
-      let currentLevel = tree;
-      let currentPath = '';
-
-      // 폴더 구조 생성
-      parts.forEach(folderName => {
-        currentPath = currentPath ? `${currentPath}/${folderName}` : folderName;
-
-        let folder = folderMap.get(currentPath);
-        
-        if (!folder) {
-          folder = {
-            name: folderName,
-            type: 'folder',
-            path: currentPath,
-            children: [],
-          };
-          folderMap.set(currentPath, folder);
-          currentLevel.push(folder);
-        }
-
-        currentLevel = folder.children;
-      });
-
-      // 파일 추가
-      currentLevel.push({
-        name: fileName,
-        type: 'file',
-        path: file.path,
-        sha: file.sha,
-        savedAt: file.savedAt,
-      });
-    });
-
-    return tree;
-  }
-
-  /**
-   * 특정 날짜의 파일이 존재하는지 확인
-   * @param {GithubFile[]} files - 파일 목록
-   * @param {string} date - YYYY-MM-DD 형식
-   * @returns {GithubFile|null}
-   */
-  findFileByDate(files, date) {
-    return files.find(file => file.extractDate() === date) || null;
-  }
-
-  /**
    * 파일 저장/업데이트
    * @param {string} path - 파일 경로
    * @param {string} content - 파일 내용
