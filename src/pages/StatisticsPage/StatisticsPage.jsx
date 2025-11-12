@@ -10,7 +10,7 @@ import './StatisticsPage.css';
 
 const StatisticsPage = () => {
   const navigate = useNavigate();
-  const { token, owner, repo, isAuthenticated } = useAuthStore();
+  const { user, token, owner, repo, isAuthenticated } = useAuthStore();
   const filesMap = useFileStore(state => state.files);
   const files = useMemo(() => Array.from(filesMap.values()), [filesMap]);
   const updateFile = useFileStore(state => state.updateFile);
@@ -99,7 +99,7 @@ const StatisticsPage = () => {
 
   return (
     <div className="statistics-page">
-      <Header username="username" repository="morningpage" />
+      <Header username={user?.name || user?.login || 'User'} repository={repo || 'repository'} />
       <TabNavigation />
       <div className="statistics-page-content">
         <Heatmap data={heatmapData} />
