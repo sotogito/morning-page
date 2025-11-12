@@ -18,27 +18,54 @@ const Heatmap = ({ data = [] }) => {
 
   const { weeks, months } = useMemo(() => {
     const today = new Date();
-    const yearAgo = new Date();
-    yearAgo.setFullYear(today.getFullYear() - 1);
-
-    // 일요일부터 시작하도록 조정
-    const startDate = new Date(yearAgo);
-    startDate.setDate(startDate.getDate() - startDate.getDay());
-
+    const currentYear = today.getFullYear();
+    
+    // 로컬 날짜를 YYYY-MM-DD 형식으로 변환하는 헬퍼 함수
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    const januaryFirst = new Date(currentYear, 0, 1);
+    const decemberLast = new Date(currentYear, 11, 31);
+    const firstDayOfWeek = januaryFirst.getDay();
+    const totalDays = Math.floor((decemberLast - januaryFirst) / (1000 * 60 * 60 * 24)) + 1;
+    const weeksNeeded = Math.ceil((firstDayOfWeek + totalDays) / 7);
     const weeksArray = [];
-    const monthsArray = [];
-    let currentMonth = '';
+    const monthsMap = new Map();
 
-    // 53주 생성
-    for (let week = 0; week < 53; week++) {
+    for (let week = 0; week < weeksNeeded; week++) {
       const weekDays = [];
       
       for (let day = 0; day < 7; day++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(currentDate.getDate() + week * 7 + day);
+        const dayIndex = week * 7 + day - firstDayOfWeek;
         
-        const dateStr = currentDate.toISOString().split('T')[0];
+        // 1월 1일 이전이나 12월 31일 이후는 빈 칸
+        if (dayIndex < 0 || dayIndex >= totalDays) {
+          weekDays.push({
+            date: null,
+            count: 0,
+            level: 0,
+            status: null,
+            title: null,
+            onClick: null,
+          });
+          continue;
+        }
+        
+        // 로컬 날짜로 계산 (타임존 문제 방지)
+        const currentDate = new Date(currentYear, 0, 1 + dayIndex);
+        const dateStr = formatDate(currentDate);
         const contribution = dataByDate.get(dateStr);
+        
+        // 월 레이블 추적 - 각 월의 첫 번째 날짜
+        if (currentDate.getDate() === 1) {
+          const month = currentDate.getMonth();
+          const monthName = currentDate.toLocaleDateString('ko-KR', { month: 'short' });
+          monthsMap.set(month, { week, label: monthName });
+        }
         
         weekDays.push({
           date: dateStr,
@@ -48,19 +75,15 @@ const Heatmap = ({ data = [] }) => {
           title: contribution?.title || null,
           onClick: contribution?.onClick || null,
         });
-
-        // 월 레이블 추적
-        if (day === 0) {
-          const monthName = currentDate.toLocaleDateString('ko-KR', { month: 'short' });
-          if (monthName !== currentMonth) {
-            currentMonth = monthName;
-            monthsArray.push({ week, label: monthName });
-          }
-        }
       }
       
       weeksArray.push(weekDays);
     }
+
+    // 월 레이블을 1월부터 12월까지 순서대로 정렬
+    const monthsArray = Array.from(monthsMap.entries())
+      .sort((a, b) => a[0] - b[0]) // 월 순서로 정렬
+      .map(([_, value]) => value);
 
     return { weeks: weeksArray, months: monthsArray };
   }, [dataByDate]);
@@ -81,50 +104,50 @@ const Heatmap = ({ data = [] }) => {
     <div className="heatmap-calendar">
       <div className="heatmap-header">
         <h2 className="heatmap-title">기여도</h2>
-        <div className="heatmap-legend">
-          <span className="legend-label">상태</span>
-          <div className="legend-item status-gray" title="커밋 없음 (또는 다른 날)" />
-          <div className="legend-item status-green" title="10:00 이전" />
-          <div className="legend-item status-orange" title="14:00 이전" />
-          <div className="legend-item status-red" title="14:00 이후" />
-        </div>
       </div>
 
       <div className="heatmap-container">
-        <div className="heatmap-months">
-          {months.map((month, idx) => (
-            <span 
-              key={idx} 
-              className="month-label"
-              style={{ left: `${month.week * 14}px` }}
-            >
-              {month.label}
-            </span>
-          ))}
-        </div>
-
         <div className="heatmap-grid">
           <div className="heatmap-days">
+            <span className="day-label">일</span>
             <span className="day-label">월</span>
+            <span className="day-label">화</span>
             <span className="day-label">수</span>
+            <span className="day-label">목</span>
             <span className="day-label">금</span>
+            <span className="day-label">토</span>
           </div>
 
-          <div className="heatmap-weeks">
-            {weeks.map((week, weekIdx) => (
-              <div key={weekIdx} className="heatmap-week">
-                {week.map((day, dayIdx) => (
-                  <div
-                    key={`${weekIdx}-${dayIdx}`}
-                    className={getClassName(day)}
-                    data-date={day.date}
-                    data-count={day.count}
-                    title={getTitle(day)}
-                    onClick={day.onClick || undefined}
-                  />
-                ))}
-              </div>
-            ))}
+          <div className="heatmap-weeks-wrapper">
+            <div className="heatmap-months">
+              {months.map((month, idx) => (
+                <span 
+                  key={idx} 
+                  className="month-label"
+                  style={{ '--week-index': month.week }}
+                >
+                  {month.label}
+                </span>
+              ))}
+            </div>
+
+            <div className="heatmap-weeks">
+              {weeks.map((week, weekIdx) => (
+                <div key={weekIdx} className="heatmap-week">
+                  {week.map((day, dayIdx) => (
+                    <div
+                      key={`${weekIdx}-${dayIdx}`}
+                      className={day.date ? getClassName(day) : 'heatmap-day empty'}
+                      data-date={day.date}
+                      data-count={day.count}
+                      title={day.date ? getTitle(day) : ''}
+                      onClick={day.onClick || undefined}
+                      style={{ cursor: day.date ? 'pointer' : 'default' }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
