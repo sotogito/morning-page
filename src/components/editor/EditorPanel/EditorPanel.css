@@ -135,13 +135,6 @@
   gap: var(--spacing-md);
 }
 
-.timer {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
 .saved-time {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
