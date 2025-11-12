@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import FileTree from '../../components/editor/FileTree/FileTree';
@@ -21,6 +21,7 @@ const EDITOR_MODE = Object.freeze({
 
 const EditorPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, token, owner, repo, isAuthenticated } = useAuthStore();
   const { 
     setFiles: setFileStore, 
@@ -61,15 +62,15 @@ const EditorPage = () => {
     return { today, filePath };
   };
 
-  const processTodaySelected = async ({ today, filePath }) => {
-    const todayFile = findFileByDate(today);
-    if (todayFile) {
-      await handleFileSelect(todayFile);
+  const processDateSelected = async (dateStr, filePath) => {
+    const file = findFileByDate(dateStr);
+    if (file) {
+      await handleFileSelect(file);
       return;
     }
 
     const newFile = {
-      name: `${today}.md`,
+      name: `${dateStr}.md`,
       path: filePath,
       sha: null,
       downloadUrl: null,
@@ -88,31 +89,40 @@ const EditorPage = () => {
 
     const loadOrReuseFiles = async () => {
       const existingFiles = getAllFiles();
+      const params = new URLSearchParams(location.search);
+      const paramDate = params.get('date');
 
-      if (existingFiles && existingFiles.length > 0) {
-        const context = createTodayContext();
-        await processTodaySelected(context);
-        return;
+      if (existingFiles && existingFiles.length <= 0) {
+        setIsLoadingFiles(true);
+        try {
+          const fileService = new GitHubFileService(token, owner, repo);
+          const mdFiles = await fileService.fetchAllMarkdownFiles();
+
+          setFileStore(mdFiles);
+        } catch (error) {
+          console.error('Failed to load files:', error);
+          showError('파일 목록을 불러오는데 실패했습니다. 다시 로그인해주세요.');
+          setIsLoadingFiles(false);
+          navigate('/login');
+          return;
+        } finally {
+          setIsLoadingFiles(false);
+        }
       }
 
       setIsLoadingFiles(true);
-      try {
-        const fileService = new GitHubFileService(token, owner, repo);
-        const mdFiles = await fileService.fetchAllMarkdownFiles();
-        setFileStore(mdFiles);
-
+      if (paramDate) {
+        const dateObj = new Date(paramDate);
+        const { filePath } = createTitle(dateObj);
+        await processDateSelected(paramDate, filePath);
+      } else {
         const context = createTodayContext();
-        await processTodaySelected(context);
-      } catch (error) {
-        console.error('Failed to load files:', error);
-        showError('파일 목록을 불러오는데 실패했습니다.');
-      } finally {
-        setIsLoadingFiles(false);
+        await processDateSelected(context.today, context.filePath);
       }
     };
 
     loadOrReuseFiles();
-  }, [isAuthenticated, token, owner, repo, navigate, showError]);
+  }, [isAuthenticated, token, owner, repo, navigate, showError, location.search]);
 
   const handleContentChange = (newContent) => {
     setContent(newContent);
@@ -167,7 +177,10 @@ const EditorPage = () => {
     }
 
     const cachedFile = getFile(file.path);
-    if (cachedFile?.content) {
+    const needContent = !(cachedFile && cachedFile.content);
+    const needSavedAt = !(cachedFile && cachedFile.savedAt != null);
+
+    if (!needContent && !needSavedAt) {
       setEditorState({
         mode: EDITOR_MODE.READ_ONLY,
         title: file.path.replace('.md', ''),
@@ -179,19 +192,31 @@ const EditorPage = () => {
 
     try {
       const fileService = new GitHubFileService(token, owner, repo);
-      const fileWithContent = await fileService.fetchFileContent(file.path);
-      const lastCommit = await fileService.getLastCommitTime(file.path);
+      const tasks = [];
+      if (needContent) {
+        tasks.push(
+          fileService.fetchFileContent(file.path).then(f => {
+            updateFile(file.path, { content: f.content });
+            return { content: f.content };
+          })
+        );
+      }
+      if (needSavedAt) {
+        tasks.push(
+          fileService.getLastCommitTime(file.path).then(lastCommit => {
+            updateFile(file.path, { savedAt: lastCommit });
+            return { savedAt: lastCommit };
+          })
+        );
+      }
+      const results = await Promise.all(tasks);
+      const merged = results.reduce((acc, cur) => ({ ...acc, ...cur }), {});
 
-      updateFile(file.path, {
-        content: fileWithContent.content,
-        savedAt: lastCommit
-      });
-      
       setEditorState({
         mode: EDITOR_MODE.READ_ONLY,
         title: file.path.replace('.md', ''),
-        content: fileWithContent.content,
-        savedAt: lastCommit
+        content: merged.content ?? cachedFile?.content ?? '',
+        savedAt: merged.savedAt ?? cachedFile?.savedAt ?? null
       });
     } catch (error) {
       console.error('Failed to load file:', error);
