@@ -45,9 +45,40 @@ const EditorPage = () => {
   const [editorMode, setEditorMode] = useState(EDITOR_MODE.EDITABLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  
-  // fileStore에서 파일 목록 가져오기
   const files = getAllFiles();
+
+  const createTodayContext = () => {
+    const { monthFolder, weekFolder, today, filePath } = createTitle();
+
+    const foldersToExpand = [
+      monthFolder,
+      `${monthFolder}/${weekFolder}`
+    ];
+    setExpandedFolders(foldersToExpand);
+    setTodayFilePath(filePath);
+    setTodayDatePrefix(today);
+
+    return { today, filePath };
+  };
+
+  const processTodaySelected = async ({ today, filePath }) => {
+    const todayFile = findFileByDate(today);
+    if (todayFile) {
+      await handleFileSelect(todayFile);
+      return;
+    }
+
+    const newFile = {
+      name: `${today}.md`,
+      path: filePath,
+      sha: null,
+      downloadUrl: null,
+      content: null,
+      savedAt: null
+    };
+    addFile(newFile);
+    await handleFileSelect(newFile);
+  };
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
@@ -55,47 +86,23 @@ const EditorPage = () => {
       return;
     }
 
-    const loadFiles = async () => {
+    const loadOrReuseFiles = async () => {
+      const existingFiles = getAllFiles();
+
+      if (existingFiles && existingFiles.length > 0) {
+        const context = createTodayContext();
+        await processTodaySelected(context);
+        return;
+      }
+
       setIsLoadingFiles(true);
       try {
         const fileService = new GitHubFileService(token, owner, repo);
         const mdFiles = await fileService.fetchAllMarkdownFiles();
-        
-        // fileStore에 GithubFile[] 저장
         setFileStore(mdFiles);
-        
-        const { monthFolder, weekFolder, today, filePath } = createTitle();
 
-        const foldersToExpand = [
-          monthFolder,
-          `${monthFolder}/${weekFolder}`
-        ];
-        setExpandedFolders(foldersToExpand);
-        setTodayFilePath(filePath);
-        setTodayDatePrefix(today);
-        
-        // fileStore에서 오늘 파일 찾기 (날짜로)
-        const todayFile = findFileByDate(today);
-        
-        if (todayFile) {
-          // 오늘 파일이 있으면 선택
-          await handleFileSelect(todayFile);
-        } else {
-          // 오늘 파일이 없으면 draft 생성
-          const fileName = `${today}.md`;
-          const newFile = {
-              name: fileName,
-              path: filePath,
-              sha: null,  // sha가 없으면 draft
-              downloadUrl: null,
-              content: null,
-              savedAt: null
-          };
-          
-          // fileStore에 draft 추가
-          addFile(newFile);
-          await handleFileSelect(newFile);
-        }
+        const context = createTodayContext();
+        await processTodaySelected(context);
       } catch (error) {
         console.error('Failed to load files:', error);
         showError('파일 목록을 불러오는데 실패했습니다.');
@@ -104,7 +111,7 @@ const EditorPage = () => {
       }
     };
 
-    loadFiles();
+    loadOrReuseFiles();
   }, [isAuthenticated, token, owner, repo, navigate, showError]);
 
   const handleContentChange = (newContent) => {
