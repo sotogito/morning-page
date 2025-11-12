@@ -101,6 +101,24 @@
   outline-offset: 1px;
 }
 
+/* 상태 기반 색상 */
+.heatmap-day.status-gray {
+  background-color: #e5e7eb; /* gray-200 */
+  border-color: #e5e7eb;
+}
+.heatmap-day.status-green {
+  background-color: #10b981; /* emerald-500 */
+  border-color: #10b981;
+}
+.heatmap-day.status-orange {
+  background-color: #f59e0b; /* amber-500 */
+  border-color: #f59e0b;
+}
+.heatmap-day.status-red {
+  background-color: #ef4444; /* red-500 */
+  border-color: #ef4444;
+}
+
 /* 기여도 레벨 색상 - GitHub 스타일 (흑백) */
 .heatmap-day.level-0 {
   background-color: #ebedf0;
