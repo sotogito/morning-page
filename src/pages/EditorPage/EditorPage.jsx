@@ -48,14 +48,18 @@ const EditorPage = () => {
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const files = getAllFiles();
 
-  const createTodayContext = () => {
-    const { monthFolder, weekFolder, today, filePath } = createTitle();
-
+  const expandFolders = (monthFolder, weekFolder) => {
     const foldersToExpand = [
       monthFolder,
       `${monthFolder}/${weekFolder}`
     ];
     setExpandedFolders(foldersToExpand);
+  }
+
+  const createTodayContext = () => {
+    const { monthFolder, weekFolder, today, filePath } = createTitle();
+
+    expandFolders(monthFolder, weekFolder);
     setTodayFilePath(filePath);
     setTodayDatePrefix(today);
 
@@ -113,7 +117,8 @@ const EditorPage = () => {
       setIsLoadingFiles(true);
       if (paramDate) {
         const dateObj = new Date(paramDate);
-        const { filePath } = createTitle(dateObj);
+        const { monthFolder, weekFolder, filePath } = createTitle(dateObj);
+        expandFolders(monthFolder, weekFolder);
         await processDateSelected(paramDate, filePath);
       } else {
         const context = createTodayContext();
@@ -165,7 +170,7 @@ const EditorPage = () => {
 
   const handleFileSelect = async (file) => {
     setSelectedFile(file);
-    
+
     if (!file.sha) {
       setEditorState({
         mode: EDITOR_MODE.EDITABLE,
