@@ -11,7 +11,6 @@ const EditorPanel = ({
   onTogglePreview,
   showPreview = false,
   onError,
-  onInfo,
   onSave,
   canSave = false,
   isReadOnly = false,

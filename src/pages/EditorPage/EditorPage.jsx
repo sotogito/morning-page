@@ -8,6 +8,8 @@ import PreviewPanel from '../../components/editor/PreviewPanel/PreviewPanel';
 import Resizer from '../../components/common/Resizer/Resizer';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import useToast from '../../hooks/useToast';
+import { ERROR_MESSAGE } from '../../constants/ErrorMessage';
+import { INFO_MESSAGE } from '../../constants/InfoMessage';
 import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
 import { GitHubFileService } from '../../services/githubFileService';
@@ -105,7 +107,7 @@ const EditorPage = () => {
           setFileStore(mdFiles);
         } catch (error) {
           console.error('Failed to load files:', error);
-          showError('파일 목록을 불러오는데 실패했습니다. 다시 로그인해주세요.');
+          showError(ERROR_MESSAGE.FAIL_LOAD_FILES);
           setIsLoadingFiles(false);
           navigate('/login');
           return;
@@ -143,10 +145,6 @@ const EditorPage = () => {
 
   const handleTogglePreview = () => {
     setShowPreview(!showPreview);
-  };
-
-  const handleInfoMessage = (message) => {
-    showInfo(message);
   };
 
   const handleErrorMessage = (message) => {
@@ -225,7 +223,7 @@ const EditorPage = () => {
       });
     } catch (error) {
       console.error('Failed to load file:', error);
-      showError('파일을 불러오는데 실패했습니다.');
+      showError(ERROR_MESSAGE.FAIL_LOAD_FILE);
     }
   };
 
@@ -233,7 +231,7 @@ const EditorPage = () => {
     // 강제 저장이 아니고 저장 불가능 상태면 리턴
     if (!force && !canSave) return;
     
-    showInfo('저장 중...');
+    showInfo(INFO_MESSAGE.SAVING);
     
     try {
       const fileService = new GitHubFileService(token, owner, repo);
@@ -278,12 +276,11 @@ const EditorPage = () => {
       // selectedFile 업데이트
       setSelectedFile({ ...selectedFile, name: fileName, path: finalFilePath, sha: savedFileData.sha, savedAt });
       
-      showInfo('저장 완료!');
+      showInfo(INFO_MESSAGE.SAVE_SUCCESS);
     } catch (error) {
       console.error('Failed to save file:', error);
-      showError('파일 저장에 실패했습니다. 페이지를 새로고침합니다.');
+      showError(ERROR_MESSAGE.FAIL_SAVE_FILE);
       
-      // 저장 실패 시 전체 리로드로 데이터 정합성 보장
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -321,7 +318,6 @@ const EditorPage = () => {
               onTogglePreview={handleTogglePreview}
               showPreview={showPreview}
               onError={handleErrorMessage}
-              onInfo={handleInfoMessage}
               onSave={handleSave}
               canSave={canSave}
               isReadOnly={editorMode === EDITOR_MODE.READ_ONLY}
