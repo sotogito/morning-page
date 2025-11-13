@@ -1,13 +1,12 @@
 import { GitHubClient } from './githubClient';
 import { User } from '../models/User';
+import { ERROR_MESSAGE } from '../constants/ErrorMessage';
 
 export class GitHubAuthService {
-  /**
-   * 사용자 인증 및 정보 가져오기
-   */
+ 
   static async authenticate(token, repoUrl) {
     if (!token || !repoUrl) {
-      throw new Error('Token and repository URL are required');
+      throw new Error(ERROR_MESSAGE.INVALID_LOGIN_INPUT);
     }
 
     const client = new GitHubClient(token);
@@ -17,7 +16,7 @@ export class GitHubAuthService {
       const user = User.fromGitHubAPI(userResponse);
 
       if (!user.isValid()) {
-        throw new Error('Invalid user data received from GitHub');
+        throw new Error(ERROR_MESSAGE.LOGIN_FAIL_DESCRIPTION);
       }
 
       const { owner, repo } = this.parseRepoUrl(repoUrl);
@@ -31,37 +30,31 @@ export class GitHubAuthService {
       };
     } catch (error) {
       console.error('Authentication failed:', error);
-      throw new Error('GitHub authentication failed. Please check your token and repository URL.');
+      throw new Error(ERROR_MESSAGE.LOGIN_FAIL_DESCRIPTION);
     }
   }
 
-  /**
-   * Repository 접근 권한 확인
-   */
   static async validateRepoAccess(client, owner, repo) {
     try {
       await client.get(`/repos/${owner}/${repo}`);
-    } catch (error) {
-      throw new Error('Cannot access the repository. Please check your permissions.');
+    } catch (_error) {
+      throw new Error(ERROR_MESSAGE.LOGIN_FAIL_DESCRIPTION);
     }
   }
 
-  /**
-   * Repository URL에서 owner와 repo 이름 추출
-   */
   static parseRepoUrl(repoUrl) {
     try {
-      const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+      const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
       if (!match) {
-        throw new Error('Invalid GitHub repository URL format');
+        throw new Error(ERROR_MESSAGE.INVALID_LOGIN_INPUT);
       }
 
       return {
         owner: match[1],
         repo: match[2].replace('.git', ''),
       };
-    } catch (error) {
-      throw new Error('Failed to parse repository URL');
+    } catch (_error) {
+      throw new Error(ERROR_MESSAGE.INVALID_LOGIN_INPUT);
     }
   }
 
