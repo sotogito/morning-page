@@ -20,7 +20,7 @@ const Heatmap = ({ data = [] }) => {
     const today = new Date();
     const currentYear = today.getFullYear();
     
-    // 로컬 날짜를 YYYY-MM-DD 형식으로 변환하는 헬퍼 함수
+    //YYYY-MM-DD
     const formatDate = (date) => {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -42,7 +42,6 @@ const Heatmap = ({ data = [] }) => {
       for (let day = 0; day < 7; day++) {
         const dayIndex = week * 7 + day - firstDayOfWeek;
         
-        // 1월 1일 이전이나 12월 31일 이후는 빈 칸
         if (dayIndex < 0 || dayIndex >= totalDays) {
           weekDays.push({
             date: null,
@@ -55,12 +54,10 @@ const Heatmap = ({ data = [] }) => {
           continue;
         }
         
-        // 로컬 날짜로 계산 (타임존 문제 방지)
         const currentDate = new Date(currentYear, 0, 1 + dayIndex);
         const dateStr = formatDate(currentDate);
         const contribution = dataByDate.get(dateStr);
         
-        // 월 레이블 추적 - 각 월의 첫 번째 날짜
         if (currentDate.getDate() === 1) {
           const month = currentDate.getMonth();
           const monthName = currentDate.toLocaleDateString('ko-KR', { month: 'short' });
@@ -80,7 +77,6 @@ const Heatmap = ({ data = [] }) => {
       weeksArray.push(weekDays);
     }
 
-    // 월 레이블을 1월부터 12월까지 순서대로 정렬
     const monthsArray = Array.from(monthsMap.entries())
       .sort((a, b) => a[0] - b[0]) // 월 순서로 정렬
       .map(([_, value]) => value);
