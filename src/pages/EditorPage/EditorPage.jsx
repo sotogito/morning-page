@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
@@ -13,6 +13,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
 import { GitHubFileService } from '../../services/githubFileService';
 import { createTitle } from '../../utils/dateTitleFormatter';
+import { buildFileTree, sortTreeDescending } from '../../utils/fileTreeUtils';
 import './EditorPage.css';
 
 const EDITOR_MODE = Object.freeze({
@@ -48,6 +49,13 @@ const EditorPage = () => {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const files = getAllFiles();
+
+  const fileTree = useMemo(() => {
+    if (files.length === 0) return [];
+    const builtTree = buildFileTree(files);
+    
+    return sortTreeDescending(builtTree);
+  }, [files]);
 
   const expandFolders = (monthFolder, weekFolder) => {
     const foldersToExpand = [
@@ -296,7 +304,7 @@ const EditorPage = () => {
         <div className="editor-layout">
           <div className="file-tree-container" style={{ width: `${fileTreeWidth}px` }}>
           <FileTree 
-              files={files} 
+              tree={fileTree} 
               onFileSelect={handleFileSelect}
               selectedFile={selectedFile}
               initialExpandedFolders={expandedFolders}

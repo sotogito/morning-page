@@ -1,78 +1,15 @@
 import { useState, useEffect } from 'react';
 import './FileTree.css';
 
-const buildFileTree = (files) => {
-  const tree = [];
-  const folderMap = new Map();
-
-  files.forEach(file => {
-    const parts = file.path.split('/');
-    const fileName = parts.pop();
-    
-    let currentLevel = tree;
-    let currentPath = '';
-
-    parts.forEach(folderName => {
-      currentPath = currentPath ? `${currentPath}/${folderName}` : folderName;
-
-      let folder = folderMap.get(currentPath);
-      
-      if (!folder) {
-        folder = {
-          name: folderName,
-          type: 'folder',
-          path: currentPath,
-          children: [],
-        };
-        folderMap.set(currentPath, folder);
-        currentLevel.push(folder);
-      }
-
-      currentLevel = folder.children;
-    });
-
-    currentLevel.push({
-      name: fileName,
-      type: 'file',
-      path: file.path,
-      sha: file.sha,
-      savedAt: file.savedAt,
-    });
-  });
-
-  return tree;
-};
-
-const sortTreeDescending = (nodes) => {
-  const sorted = [...nodes].sort((a, b) => b.name.localeCompare(a.name, 'ko-KR'));
-
-  return sorted.map(node => ({
-    ...node,
-    children: node.children ? sortTreeDescending(node.children) : node.children
-  }));
-};
-
 const FileTree = ({ 
-  files = [],  // GithubFile[] - 평면 배열
+  tree = [],
   onFileSelect, 
   selectedFile = null,
   initialExpandedFolders = [],
   todayFilePath = '',
   todayDatePrefix = ''
 }) => {
-  const [tree, setTree] = useState([]);
   const [expandedFolders, setExpandedFolders] = useState(new Set(initialExpandedFolders));
-
-  // files 배열이 변경되면 트리 재생성
-  useEffect(() => {
-    if (files.length > 0) {
-      const builtTree = buildFileTree(files);
-      const sortedTree = sortTreeDescending(builtTree);
-      setTree(sortedTree);
-    } else {
-      setTree([]);
-    }
-  }, [files]);
 
   useEffect(() => {
     if (initialExpandedFolders.length > 0) {
