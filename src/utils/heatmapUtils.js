@@ -1,14 +1,4 @@
-const HEATMAP_STATUS = Object.freeze({
-  GRAY: 'gray',
-  GREEN: 'green',
-  ORANGE: 'orange',
-  RED: 'red',
-});
-
-const HOUR_THRESHOLD = Object.freeze({
-  MORNING: 10,
-  AFTERNOON: 14,
-});
+import { HEATMAP_STATUS, HOUR_THRESHOLD } from '../constants/HeatmapStatus';
 
 export const buildHeatmapData = (files) => {
   return files.map(file => {
