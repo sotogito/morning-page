@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { FILE_TREE_TYPE } from '../../../constants/FileTreeType';
 import './FileTree.css';
 
 const FileTree = ({ 
@@ -29,7 +30,7 @@ const FileTree = ({
 
   const renderFileTree = (items, depth = 0) => {
     return items.map((item, index) => {
-      const isFolder = item.type === 'folder';
+      const isFolder = item.type === FILE_TREE_TYPE.FOLDER;
       const isExpanded = expandedFolders.has(item.path);
       const isSelected = !isFolder && selectedFile?.path === item.path;
       const isToday = !isFolder && (

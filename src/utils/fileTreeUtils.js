@@ -1,3 +1,5 @@
+import { FILE_TREE_TYPE } from '../constants/FileTreeType';
+
 export const buildFileTree = (files) => {
   const tree = [];
   const folderMap = new Map();
@@ -17,7 +19,7 @@ export const buildFileTree = (files) => {
       if (!folder) {
         folder = {
           name: folderName,
-          type: 'folder',
+          type: FILE_TREE_TYPE.FOLDER,
           path: currentPath,
           children: [],
         };
@@ -30,7 +32,7 @@ export const buildFileTree = (files) => {
 
     currentLevel.push({
       name: fileName,
-      type: 'file',
+      type: FILE_TREE_TYPE.FILE,
       path: file.path,
       sha: file.sha,
       savedAt: file.savedAt,
