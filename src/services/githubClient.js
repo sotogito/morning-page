@@ -1,5 +1,9 @@
 const GITHUB_API_BASE = 'https://api.github.com';
 
+const ENDPOINTS = Object.freeze({
+  user: () => '/user',
+});
+
 export class GitHubClient {
   constructor(token) {
     this.token = token;
@@ -76,7 +80,7 @@ export class GitHubClient {
    */
   async validateToken() {
     try {
-      await this.get('/user');
+      await this.get(ENDPOINTS.user());
       return true;
     } catch (_error) {
       return false;

@@ -2,6 +2,11 @@ import { GitHubClient } from './githubClient';
 import { User } from '../models/User';
 import { ERROR_MESSAGE } from '../constants/ErrorMessage';
 
+const ENDPOINTS = Object.freeze({
+  user: () => '/user',
+  repo: (owner, repo) => `/repos/${owner}/${repo}`,
+});
+
 export class GitHubAuthService {
  
   static async authenticate(token, repoUrl) {
@@ -12,7 +17,7 @@ export class GitHubAuthService {
     const client = new GitHubClient(token);
 
     try {
-      const userResponse = await client.get('/user');
+      const userResponse = await client.get(ENDPOINTS.user());
       const user = User.fromGitHubAPI(userResponse);
 
       if (!user.isValid()) {
@@ -36,7 +41,7 @@ export class GitHubAuthService {
 
   static async validateRepoAccess(client, owner, repo) {
     try {
-      await client.get(`/repos/${owner}/${repo}`);
+      await client.get(ENDPOINTS.repo(owner, repo));
     } catch (_error) {
       throw new Error(ERROR_MESSAGE.LOGIN_FAIL_DESCRIPTION);
     }

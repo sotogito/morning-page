@@ -2,6 +2,11 @@ import { GitHubClient } from './githubClient';
 import { GithubFile } from '../models/GithubFile';
 import { ERROR_MESSAGE } from '../constants/ErrorMessage';
 
+const ENDPOINTS = Object.freeze({
+  contents: (owner, repo, path = '') => `/repos/${owner}/${repo}/contents/${path}`,
+  commits: (owner, repo, path) => `/repos/${owner}/${repo}/commits?path=${path}`,
+});
+
 export class GitHubFileService {
   constructor(token, owner, repo) {
     this.client = new GitHubClient(token);
@@ -16,7 +21,7 @@ export class GitHubFileService {
    */
   async fetchAllMarkdownFiles(path = '') {
     try {
-      const endpoint = `/repos/${this.owner}/${this.repo}/contents/${path}`;
+      const endpoint = ENDPOINTS.contents(this.owner, this.repo, path);
       const contents = await this.client.get(endpoint);
 
       if (!contents || contents.length === 0) {
@@ -52,7 +57,8 @@ export class GitHubFileService {
    */
   async fetchFileContent(path) {
     try {
-      const endpoint = `/repos/${this.owner}/${this.repo}/contents/${path}`;
+      console.log("내용 가져오기");
+      const endpoint = ENDPOINTS.contents(this.owner, this.repo, path);
       const response = await this.client.get(endpoint);
 
       const githubFile = GithubFile.fromGitHubAPI(response);
@@ -78,7 +84,7 @@ export class GitHubFileService {
    */
   async saveFile(path, content, message, sha = null) {
     try {
-      const endpoint = `/repos/${this.owner}/${this.repo}/contents/${path}`;
+      const endpoint = ENDPOINTS.contents(this.owner, this.repo, path);
   
       const base64Content = btoa(unescape(encodeURIComponent(content)));
 
@@ -86,13 +92,11 @@ export class GitHubFileService {
         message,
         content: base64Content,
       };
-
       if (sha) {
         data.sha = sha;
       }
-
-      const response = await this.client.put(endpoint, data);
-      return response;
+      
+      return await this.client.put(endpoint, data);
     } catch (error) {
       console.error('Failed to save file:', error);
       throw new Error(ERROR_MESSAGE.FAIL_SAVE_FILE);
@@ -106,9 +110,10 @@ export class GitHubFileService {
    */
   async fetchFileCommits(path) {
     try {
-      const endpoint = `/repos/${this.owner}/${this.repo}/commits?path=${path}`;
-      const commits = await this.client.get(endpoint);
-      return commits;
+      console.log("시간 가져오기");
+      const endpoint = ENDPOINTS.commits(this.owner, this.repo, path);
+
+      return await this.client.get(endpoint);
     } catch (error) {
       console.error('Failed to fetch file commits:', error);
       throw new Error(ERROR_MESSAGE.FAIL_LOAD_FILE);
