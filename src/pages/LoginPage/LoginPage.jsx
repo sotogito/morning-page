@@ -36,9 +36,9 @@ const LoginPage = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 2000));
       navigate('/editor');
-    } catch (err) {
+    } catch (error) {
       showError(ERROR_MESSAGE.LOGIN_FAIL_HEAD);
-      setError(err.message || ERROR_MESSAGE.LOGIN_FAIL_DESCRIPTION);
+      setError(error.message || ERROR_MESSAGE.LOGIN_FAIL_DESCRIPTION);
     } finally {
       setIsLoading(false);
     }

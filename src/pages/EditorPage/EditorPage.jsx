@@ -8,7 +8,6 @@ import PreviewPanel from '../../components/editor/PreviewPanel/PreviewPanel';
 import Resizer from '../../components/common/Resizer/Resizer';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import useToast from '../../hooks/useToast';
-import { ERROR_MESSAGE } from '../../constants/ErrorMessage';
 import { INFO_MESSAGE } from '../../constants/InfoMessage';
 import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
@@ -107,7 +106,7 @@ const EditorPage = () => {
           setFileStore(mdFiles);
         } catch (error) {
           console.error('Failed to load files:', error);
-          showError(ERROR_MESSAGE.FAIL_LOAD_FILES);
+          showError(error.message);
           setIsLoadingFiles(false);
           navigate('/login');
           return;
@@ -223,7 +222,7 @@ const EditorPage = () => {
       });
     } catch (error) {
       console.error('Failed to load file:', error);
-      showError(ERROR_MESSAGE.FAIL_LOAD_FILE);
+      showError(error.message);
     }
   };
 
@@ -279,7 +278,7 @@ const EditorPage = () => {
       showInfo(INFO_MESSAGE.SAVE_SUCCESS);
     } catch (error) {
       console.error('Failed to save file:', error);
-      showError(ERROR_MESSAGE.FAIL_SAVE_FILE);
+      showError(error.message);
       
       setTimeout(() => {
         window.location.reload();

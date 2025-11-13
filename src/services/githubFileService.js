@@ -1,5 +1,6 @@
 import { GitHubClient } from './githubClient';
 import { GithubFile } from '../models/GithubFile';
+import { ERROR_MESSAGE } from '../constants/ErrorMessage';
 
 export class GitHubFileService {
   constructor(token, owner, repo) {
@@ -9,18 +10,16 @@ export class GitHubFileService {
   }
 
   /**
-   * Repository의 모든 .md 파일 목록 가져오기 (재귀적으로 탐색)
+   * 레퍼지토리의 모든 .md 파일 목록 가져오기
    * @param {string} path - 탐색할 경로 (기본: 루트)
    * @returns {Promise<GithubFile[]>}
    */
   async fetchAllMarkdownFiles(path = '') {
     try {
       const endpoint = `/repos/${this.owner}/${this.repo}/contents/${path}`;
-      console.log('Fetching from:', endpoint);
       const contents = await this.client.get(endpoint);
 
       if (!contents || contents.length === 0) {
-        console.log('Repository is empty or path has no contents');
         return [];
       }
 
@@ -38,12 +37,11 @@ export class GitHubFileService {
         }
       }
 
-      console.log(`Found ${files.length} markdown files matching date pattern`);
       return files;
     } catch (error) {
       console.error('Failed to fetch markdown files:', error);
       console.error('Error details:', error.message);
-      throw new Error(`Failed to load files from repository: ${error.message}`);
+      throw new Error(ERROR_MESSAGE.FAIL_LOAD_FILES);
     }
   }
 
@@ -58,8 +56,7 @@ export class GitHubFileService {
       const response = await this.client.get(endpoint);
 
       const githubFile = GithubFile.fromGitHubAPI(response);
-      
-      // base64 content 디코딩
+
       if (response.content) {
         githubFile.decodeContent(response.content);
       }
@@ -67,7 +64,7 @@ export class GitHubFileService {
       return githubFile;
     } catch (error) {
       console.error('Failed to fetch file content:', error);
-      throw new Error('Failed to load file content');
+      throw new Error(ERROR_MESSAGE.FAIL_LOAD_FILE);
     }
   }
 
@@ -82,8 +79,7 @@ export class GitHubFileService {
   async saveFile(path, content, message, sha = null) {
     try {
       const endpoint = `/repos/${this.owner}/${this.repo}/contents/${path}`;
-      
-      // content를 base64로 인코딩
+  
       const base64Content = btoa(unescape(encodeURIComponent(content)));
 
       const data = {
@@ -99,7 +95,7 @@ export class GitHubFileService {
       return response;
     } catch (error) {
       console.error('Failed to save file:', error);
-      throw new Error('Failed to save file to repository');
+      throw new Error(ERROR_MESSAGE.FAIL_SAVE_FILE);
     }
   }
 
@@ -115,7 +111,7 @@ export class GitHubFileService {
       return commits;
     } catch (error) {
       console.error('Failed to fetch file commits:', error);
-      throw new Error('Failed to load commit history');
+      throw new Error(ERROR_MESSAGE.FAIL_LOAD_FILE);
     }
   }
 
@@ -136,4 +132,5 @@ export class GitHubFileService {
       return null;
     }
   }
+
 }

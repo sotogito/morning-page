@@ -10,14 +10,13 @@ export class GitHubClient {
   }
 
   /**
-   * GitHub API GET 요청
+   * 레퍼지토리 파일 목록 반환
    * @param {string} endpoint - API 엔드포인트 (예: '/user')
    * @returns {Promise<Object>}
    */
   async get(endpoint) {
     try {
       const url = `${GITHUB_API_BASE}${endpoint}`;
-      console.log('GitHub API GET:', url);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -27,9 +26,8 @@ export class GitHubClient {
       if (!response.ok) {
         const errorBody = await response.text();
         
-        // 404이고 빈 레포지토리인 경우 빈 배열 반환
-        if (response.status === 404 && errorBody.includes('This repository is empty')) {
-          console.log('Repository is empty, returning empty array');
+        if (response.status === 404 
+          && errorBody.includes('This repository is empty')) {
           return [];
         }
         
@@ -45,7 +43,7 @@ export class GitHubClient {
   }
 
   /**
-   * GitHub API PUT 요청 (파일 저장/업데이트)
+   * 파일 저장 및 업데이트
    * @param {string} endpoint - API 엔드포인트
    * @param {Object} data - 요청 본문
    * @returns {Promise<Object>}
@@ -80,8 +78,9 @@ export class GitHubClient {
     try {
       await this.get('/user');
       return true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
+  
 }
