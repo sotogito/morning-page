@@ -30,6 +30,12 @@
   color: var(--color-text-primary);
 }
 
+.preview-body::selection,
+.preview-body *::selection {
+  background-color: rgb(255, 255, 168);
+  color: #000;
+}
+
 .preview-body h1 {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
