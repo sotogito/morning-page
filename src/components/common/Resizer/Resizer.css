@@ -1,0 +1,43 @@
+.resizer {
+  position: relative;
+  flex-shrink: 0;
+  background-color: var(--color-bg-secondary);
+  z-index: var(--z-base);
+}
+
+.resizer.horizontal {
+  width: 4px;
+  cursor: col-resize;
+}
+
+.resizer.vertical {
+  height: 4px;
+  cursor: row-resize;
+}
+
+.resizer:hover {
+  background-color: var(--color-border-primary);
+}
+
+.resizer:active {
+  background-color: var(--color-accent);
+}
+
+.resizer-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.resizer.horizontal .resizer-handle {
+  width: 8px;
+  transform: translateX(-2px);
+}
+
+.resizer.vertical .resizer-handle {
+  height: 8px;
+  transform: translateY(-2px);
+}
+
