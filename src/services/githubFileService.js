@@ -2,6 +2,7 @@ import { GitHubClient } from './githubClient';
 import { GithubFile } from '../models/GithubFile';
 import { ERROR_MESSAGE } from '../constants/ErrorMessage';
 import { StatsService } from './statsService';
+import { encodeToBase64 } from '../utils/base64Utils';
 
 const ENDPOINTS = Object.freeze({
   contents: (owner, repo, path = '') => `/repos/${owner}/${repo}/contents/${path}`,
@@ -91,7 +92,7 @@ export class GitHubFileService {
     try {
       const endpoint = ENDPOINTS.contents(this.owner, this.repo, path);
   
-      const base64Content = btoa(unescape(encodeURIComponent(content)));
+      const base64Content = encodeToBase64(content);
 
       const data = {
         message,

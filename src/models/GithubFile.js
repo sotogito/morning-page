@@ -1,3 +1,5 @@
+import { decodeFromBase64 } from '../utils/base64Utils';
+
 export class GithubFile {
   constructor({ name, path, sha, downloadUrl, content, savedAt }) {
     this.name = name;
@@ -47,7 +49,7 @@ export class GithubFile {
    */
   decodeContent(base64Content) {
     try {
-      this.content = decodeURIComponent(escape(atob(base64Content)));
+      this.content = decodeFromBase64(base64Content);
       return this.content;
     } catch (error) {
       console.error('Failed to decode content:', error);

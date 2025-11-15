@@ -1,5 +1,6 @@
 import { GitHubClient } from './githubClient';
 import { getTodayString, isSameDay, isNextDay } from '../utils/dateUtils';
+import { encodeToBase64, decodeFromBase64 } from '../utils/base64Utils';
 
 const STATS_PATH = '.morningpage/stats.json';
 
@@ -45,8 +46,7 @@ export class StatsService {
       const response = await this.client.get(endpoint);
       
       if (response.content) {
-        // base64 디코딩
-        const content = decodeURIComponent(escape(atob(response.content)));
+        const content = decodeFromBase64(response.content);
         return {
           data: JSON.parse(content),
           sha: response.sha,
@@ -71,7 +71,7 @@ export class StatsService {
       const endpoint = ENDPOINTS.statsFile(this.owner, this.repo);
       
       const content = JSON.stringify(statsData, null, 2);
-      const base64Content = btoa(unescape(encodeURIComponent(content)));
+      const base64Content = encodeToBase64(content);
 
       const data = {
         message: 'Update stats',
