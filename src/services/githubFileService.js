@@ -32,6 +32,9 @@ export class GitHubFileService {
 
       for (const item of contents) {
         if (item.type === 'dir') {
+          if (item.name === '.morningpage') {
+            continue;
+          }
           const childFiles = await this.fetchAllMarkdownFiles(item.path);
           files.push(...childFiles);
         } else {
