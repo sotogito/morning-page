@@ -107,6 +107,7 @@ const LoginPage = () => {
         setIsHoveringInfo(false);
       }}>
         <div className="modal-info-content">
+          <h1 className="modal-info-header">Good Morning!</h1>
           <h2 className="modal-info-title">프롤로그</h2>
           <p className="modal-info-text">
             20살 때 처음 타투이스트로 일을 시작했습니다. 1인 1도안이라는 암묵적인 규칙 속에서 늘 창조성에 대한 갈망이 있었습니다. 
