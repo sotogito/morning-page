@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ToastContainer from '../../components/common/Message/ToastContainer';
+import Modal from '../../components/common/Modal/Modal';
 import useToast from '../../hooks/useToast';
 import { useAuthStore } from '../../store/authStore';
 import { GitHubAuthService } from '../../services/githubAuthService';
@@ -13,6 +14,7 @@ const LoginPage = () => {
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toasts, showError, showInfo, removeToast } = useToast();
   const navigate = useNavigate();
   const { login } = useAuthStore();
@@ -87,9 +89,21 @@ const LoginPage = () => {
               {isLoading ? '로그인 중...' : '로그인'}
             </button>
           </form>
+          
+          <button 
+            className="login-info-link"
+            onClick={() => setIsModalOpen(true)}
+          >
+            모닝페이지란?
+          </button>
         </div>
       </div>
       <ToastContainer toasts={toasts} onClose={removeToast} />
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <div>
+          {/* 내용을 추후 채울 예정 */}
+        </div>
+      </Modal>
     </>
   );
 };

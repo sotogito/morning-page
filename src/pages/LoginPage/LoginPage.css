@@ -28,6 +28,7 @@
   display: flex;
   flex-direction: column;
   gap: 30px;
+  margin-top: 50px;
   position: relative;
   z-index: 1;
 }
@@ -45,7 +46,7 @@
   display: block;
   font-size: 12px;
   letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  margin-bottom: 5px;
   margin-top: 20px;
 }
 
@@ -117,5 +118,32 @@
   font-size: 12px;
   margin: 8px 0 0 0;
   text-align: center;
+}
+
+.login-info-link {
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 8px;
+  text-align: left;
+  transition: all 0.2s ease;
+  display: inline-block;
+  width: fit-content;
+  align-self: flex-start;
+  line-height: 1.4;
+}
+
+.login-info-link:hover {
+  color: #e5ff00;
+  background-color: #00e1ff;
+  text-decoration: none;
+  padding: 0;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  letter-spacing: -0.2px;
 }
 
