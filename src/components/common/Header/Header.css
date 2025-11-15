@@ -21,6 +21,7 @@
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   letter-spacing: -0.5px;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
 }
 
 .header-right {
