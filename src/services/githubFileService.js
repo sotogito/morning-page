@@ -1,6 +1,7 @@
 import { GitHubClient } from './githubClient';
 import { GithubFile } from '../models/GithubFile';
 import { ERROR_MESSAGE } from '../constants/ErrorMessage';
+import { StatsService } from './statsService';
 
 const ENDPOINTS = Object.freeze({
   contents: (owner, repo, path = '') => `/repos/${owner}/${repo}/contents/${path}`,
@@ -12,6 +13,7 @@ export class GitHubFileService {
     this.client = new GitHubClient(token);
     this.owner = owner;
     this.repo = repo;
+    this.statsService = new StatsService(token, owner, repo);
   }
 
   /**
@@ -99,10 +101,38 @@ export class GitHubFileService {
         data.sha = sha;
       }
       
-      return await this.client.put(endpoint, data);
+      const result = await this.client.put(endpoint, data);
+      
+      await this.updateStatsIfNeeded(path);
+      
+      return result;
     } catch (error) {
       console.error('Failed to save file:', error);
       throw new Error(ERROR_MESSAGE.FAIL_SAVE_FILE);
+    }
+  }
+
+  /**
+   * 필요한 경우 통계 업데이트
+   * @param {string} path - 저장된 파일 경로
+   */
+  async updateStatsIfNeeded(path) {
+    try {
+      const hasMorningPageFolder = await this.statsService.checkMorningPageFolder();
+      if (!hasMorningPageFolder) {
+        console.log('No .morningpage folder found, skipping stats update');
+        return;
+      }
+
+      if (path.endsWith('.md')) {
+        const datePattern = /(\d{4})-(\d{2})-(\d{2})(\s.*)?\.md$/;
+        if (datePattern.test(path)) {
+          await this.statsService.updateStats();
+          console.log('Stats updated for:', path);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update stats:', error);
     }
   }
 
