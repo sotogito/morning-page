@@ -18,7 +18,7 @@ export class GitHubClient {
    * @param {string} endpoint - API 엔드포인트 (예: '/user')
    * @returns {Promise<Object>}
    */
-  async get(endpoint) {
+  async get(endpoint, options = {}) {
     try {
       const url = `${GITHUB_API_BASE}${endpoint}`;
       
@@ -34,6 +34,9 @@ export class GitHubClient {
           && errorBody.includes('This repository is empty')) {
           return [];
         }
+        if (options.silent && response.status === 404) {
+          throw new Error(`GitHub API Error: ${response.status} ${response.statusText} - ${errorBody}`);
+        }
         
         console.error('GitHub API Error Response:', errorBody);
         throw new Error(`GitHub API Error: ${response.status} ${response.statusText} - ${errorBody}`);
@@ -41,7 +44,9 @@ export class GitHubClient {
 
       return await response.json();
     } catch (error) {
-      console.error('GitHub API GET error:', error);
+      if (!options.silent) {
+        console.error('GitHub API GET error:', error);
+      }
       throw error;
     }
   }

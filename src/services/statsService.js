@@ -29,7 +29,7 @@ export class StatsService {
   async checkMorningPageFolder() {
     try {
       const endpoint = ENDPOINTS.morningPageFolder(this.owner, this.repo);
-      await this.client.get(endpoint);
+      await this.client.get(endpoint, { silent: true });
       return true;
     } catch (error) {
       return false;
@@ -43,7 +43,7 @@ export class StatsService {
   async fetchStats() {
     try {
       const endpoint = ENDPOINTS.statsFile(this.owner, this.repo);
-      const response = await this.client.get(endpoint);
+      const response = await this.client.get(endpoint, { silent: true });
       
       if (response.content) {
         const content = decodeFromBase64(response.content);
@@ -55,7 +55,6 @@ export class StatsService {
       
       return null;
     } catch (error) {
-      console.log('Stats file not found, will create new one');
       return null;
     }
   }
