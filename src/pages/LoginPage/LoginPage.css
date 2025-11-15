@@ -10,6 +10,12 @@
   background-position: 80% 25%;
   background-repeat: no-repeat;
   position: relative;
+  transition: background-position 0.3s ease, background-size 0.3s ease;
+}
+
+.login-page.modal-open {
+  background-position: 50% 70%;
+  background-size: 100%;
 }
 
 .login-page::before {

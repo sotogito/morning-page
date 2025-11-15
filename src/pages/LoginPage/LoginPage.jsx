@@ -15,6 +15,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHoveringInfo, setIsHoveringInfo] = useState(false);
   const { toasts, showError, showInfo, removeToast } = useToast();
   const navigate = useNavigate();
   const { login } = useAuthStore();
@@ -48,7 +49,7 @@ const LoginPage = () => {
 
   return (
     <>
-      <div className="login-page">
+      <div className={`login-page ${isModalOpen || isHoveringInfo ? 'modal-open' : ''}`}>
         <div className="login-card">
           <h1 className="login-title">morning page 🌞</h1>
 
@@ -93,13 +94,18 @@ const LoginPage = () => {
           <button 
             className="login-info-link"
             onClick={() => setIsModalOpen(true)}
+            onMouseEnter={() => setIsHoveringInfo(true)}
+            onMouseLeave={() => !isModalOpen && setIsHoveringInfo(false)}
           >
             모닝페이지란?
           </button>
         </div>
       </div>
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={isModalOpen} onClose={() => {
+        setIsModalOpen(false);
+        setIsHoveringInfo(false);
+      }}>
         <div>
           {/* 내용을 추후 채울 예정 */}
         </div>
