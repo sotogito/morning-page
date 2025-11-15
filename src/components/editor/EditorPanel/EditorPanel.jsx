@@ -6,15 +6,15 @@ const EditorPanel = ({
   title = '',
   onTitleChange,
   content = '',
-  onCanSave,
   onContentChange,
-  onTogglePreview,
-  showPreview = false,
-  onError,
-  onSave,
   canSave = false,
-  isReadOnly = false,
+  onCanSave,
+  onSave,
   savedAt = null,
+  isReadOnly = false,
+  showPreview = false,
+  onTogglePreview,
+  onError,
 }) => {
   const [charCount, setCharCount] = useState(0);
   const minCharCount = 1000;

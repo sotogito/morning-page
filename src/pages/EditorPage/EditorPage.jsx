@@ -47,7 +47,6 @@ const EditorPage = () => {
   const [todayDatePrefix, setTodayDatePrefix] = useState('');
   const [editorMode, setEditorMode] = useState(EDITOR_MODE.EDITABLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const files = getAllFiles();
 
   const fileTree = useMemo(() => {
@@ -106,7 +105,6 @@ const EditorPage = () => {
       const paramDate = params.get('date');
 
       if (existingFiles && existingFiles.length <= 0) {
-        setIsLoadingFiles(true);
         try {
           const fileService = new GitHubFileService(token, owner, repo);
           const mdFiles = await fileService.fetchAllMarkdownFiles();
@@ -115,15 +113,11 @@ const EditorPage = () => {
         } catch (error) {
           console.error('Failed to load files:', error);
           showError(error.message);
-          setIsLoadingFiles(false);
           navigate('/login');
           return;
-        } finally {
-          setIsLoadingFiles(false);
         }
       }
 
-      setIsLoadingFiles(true);
       if (paramDate) {
         const dateObj = new Date(paramDate);
         const { monthFolder, weekFolder, filePath } = createTitle(dateObj);
@@ -235,7 +229,6 @@ const EditorPage = () => {
   };
 
   const handleSave = async (force = false) => {
-    // 강제 저장이 아니고 저장 불가능 상태면 리턴
     if (!force && !canSave) return;
     
     showInfo(INFO_MESSAGE.SAVING);
@@ -243,19 +236,16 @@ const EditorPage = () => {
     try {
       const fileService = new GitHubFileService(token, owner, repo);
       
-      // 제목 trim 처리
       const trimmedTitle = title.trim();
       const finalFilePath = `${trimmedTitle}.md`;
       const commitMessage = `Add morning page: ${trimmedTitle}`;
       
-      // 파일 저장 (신규 또는 업데이트)
       const sha = selectedFile?.sha || null;
       const response = await fileService.saveFile(finalFilePath, content, commitMessage, sha);
       
       const savedAt = new Date().toISOString();
       const fileName = finalFilePath.split('/').pop();
       
-      // fileStore에 파일 추가/업데이트
       const savedFileData = {
         name: fileName,
         path: finalFilePath,
@@ -265,23 +255,25 @@ const EditorPage = () => {
         downloadUrl: response?.content?.download_url || null
       };
       
-      // 경로가 변경되었으면 (draft → 실제 파일명) 기존 파일 제거 후 새로 추가
       if (selectedFile.path !== finalFilePath) {
         const { removeFile } = useFileStore.getState();
         removeFile(selectedFile.path);
         addFile(savedFileData);
       } else {
-        // 경로가 같으면 업데이트
         updateFile(finalFilePath, savedFileData);
       }
       
-      // UI 상태 업데이트
       setLastSavedAt(savedAt);
       setEditorMode(EDITOR_MODE.READ_ONLY);
       setCanSave(false);
       
       // selectedFile 업데이트
-      setSelectedFile({ ...selectedFile, name: fileName, path: finalFilePath, sha: savedFileData.sha, savedAt });
+      setSelectedFile({ ...selectedFile, 
+        name: fileName, 
+        path: finalFilePath, 
+        sha: savedFileData.sha, 
+        savedAt 
+      });
       
       showInfo(INFO_MESSAGE.SAVE_SUCCESS);
     } catch (error) {
@@ -321,14 +313,14 @@ const EditorPage = () => {
               onTitleChange={handleTitleChange}
               content={content}
               onContentChange={handleContentChange}
-              onCanSave={handleCanSaveChange}
-              onTogglePreview={handleTogglePreview}
-              showPreview={showPreview}
-              onError={handleErrorMessage}
-              onSave={handleSave}
               canSave={canSave}
-              isReadOnly={editorMode === EDITOR_MODE.READ_ONLY}
+              onCanSave={handleCanSaveChange}
+              onSave={handleSave}
               savedAt={lastSavedAt}
+              isReadOnly={editorMode === EDITOR_MODE.READ_ONLY}
+              showPreview={showPreview}
+              onTogglePreview={handleTogglePreview}
+              onError={handleErrorMessage}
             />
           </div>
 
