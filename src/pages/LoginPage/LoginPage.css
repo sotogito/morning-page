@@ -141,6 +141,7 @@
   width: fit-content;
   align-self: flex-start;
   line-height: 1.4;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
 }
 
 .login-info-link:hover {
@@ -151,5 +152,56 @@
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   letter-spacing: -0.2px;
+}
+
+.modal-info-content {
+  color: #000;
+  line-height: 1.8;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-title:not(:first-child) {
+  margin-top: 32px;
+}
+
+.modal-info-text {
+  font-size: 14px;
+  margin: 0 0 16px 0;
+  line-height: 1.8;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-list {
+  margin: 16px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.modal-info-list li {
+  font-size: 14px;
+  margin-bottom: 8px;
+  line-height: 1.8;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-quote {
+  margin: 24px 0 0 0;
+  padding: 16px 20px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-left: 3px solid rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  line-height: 1.8;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.8);
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
 }
 
