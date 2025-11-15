@@ -48,7 +48,7 @@ const LoginPage = () => {
     <>
       <div className="login-page">
         <div className="login-card">
-          <h1 className="login-title">morning page</h1>
+          <h1 className="login-title">morning page 🌞</h1>
 
           <form onSubmit={handleLogin}>
             <label className="login-label" htmlFor="repository">
