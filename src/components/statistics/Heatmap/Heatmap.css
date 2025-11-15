@@ -38,11 +38,29 @@
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
+  display: inline-block;
+  width: fit-content;
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.heatmap-weeks-wrapper {
+  position: relative;
+  display: inline-block;
   background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  padding-top: calc(var(--spacing-sm) + 20px);
 }
 
 .heatmap-months {
-  position: relative;
+  position: absolute;
+  top: var(--spacing-sm);
+  left: 0;
+  right: 0;
   height: 20px;
   margin-bottom: var(--spacing-xs);
 }
@@ -52,18 +70,15 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-medium);
-}
-
-.heatmap-grid {
-  display: flex;
-  gap: var(--spacing-sm);
+  left: calc(var(--week-index, 0) * 14px + 5px);
+  padding-left: 25px;
 }
 
 .heatmap-days {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding-top: 2px;
+  padding-top: calc(var(--spacing-sm) + 20px);
 }
 
 .day-label {
@@ -76,8 +91,7 @@
 .heatmap-weeks {
   display: flex;
   gap: 3px;
-  flex: 1;
-  overflow-x: auto;
+  width: fit-content;
 }
 
 .heatmap-week {
@@ -99,6 +113,35 @@
   transform: scale(1.2);
   outline: 1px solid var(--color-text-secondary);
   outline-offset: 1px;
+}
+
+.heatmap-day.empty {
+  background-color: transparent;
+  border-color: transparent;
+  cursor: default;
+}
+
+.heatmap-day.empty:hover {
+  transform: none;
+  outline: none;
+}
+
+/* 상태 기반 색상 */
+.heatmap-day.status-gray {
+  background-color: #e5e7eb; /* gray-200 */
+  border-color: #e5e7eb;
+}
+.heatmap-day.status-green {
+  background-color: #10b981; /* emerald-500 */
+  border-color: #10b981;
+}
+.heatmap-day.status-orange {
+  background-color: #f59e0b; /* amber-500 */
+  border-color: #f59e0b;
+}
+.heatmap-day.status-red {
+  background-color: #ef4444; /* red-500 */
+  border-color: #ef4444;
 }
 
 /* 기여도 레벨 색상 - GitHub 스타일 (흑백) */

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import FileTree from '../../components/editor/FileTree/FileTree';
@@ -7,7 +8,12 @@ import PreviewPanel from '../../components/editor/PreviewPanel/PreviewPanel';
 import Resizer from '../../components/common/Resizer/Resizer';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import useToast from '../../hooks/useToast';
+import { INFO_MESSAGE } from '../../constants/InfoMessage';
+import { useAuthStore } from '../../store/authStore';
+import { useFileStore } from '../../store/fileStore';
+import { GitHubFileService } from '../../services/githubFileService';
 import { createTitle } from '../../utils/dateTitleFormatter';
+import { buildFileTree, sortTreeDescending } from '../../utils/fileTreeUtils';
 import './EditorPage.css';
 
 const EDITOR_MODE = Object.freeze({
@@ -16,6 +22,19 @@ const EDITOR_MODE = Object.freeze({
 });
 
 const EditorPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, token, owner, repo, isAuthenticated } = useAuthStore();
+  const { 
+    setFiles: setFileStore, 
+    getAllFiles, 
+    findFileByDate, 
+    getFile, 
+    updateFile, 
+    addFile 
+  } = useFileStore();
+  const { toasts, showError, showInfo, removeToast } = useToast();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [canSave, setCanSave] = useState(false);
@@ -25,86 +44,93 @@ const EditorPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState([]);
   const [todayFilePath, setTodayFilePath] = useState('');
+  const [todayDatePrefix, setTodayDatePrefix] = useState('');
   const [editorMode, setEditorMode] = useState(EDITOR_MODE.EDITABLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
-  const { toasts, showError, showInfo, removeToast } = useToast();
-  const [files, setFiles] = useState('');
+  const files = getAllFiles();
 
-  // 페이지 로드 시 오늘 날짜 파일 확인 및 생성
-  useEffect(() => {
-    // TODO: GitHub에서 파일 목록 불러오기
-    // TODO: 오늘 날짜 파일 있는지 확인
+  const fileTree = useMemo(() => {
+    if (files.length === 0) return [];
+    const builtTree = buildFileTree(files);
     
-    // 현재는 오늘 파일이 없다고 가정하고 생성
-    const todayTitle = createTitle();
-    setTitle(todayTitle);
+    return sortTreeDescending(builtTree);
+  }, [files]);
 
-    // 제목에서 경로 파싱: "11월/2째주/2025-11-08 "
-    const parts = todayTitle.trim().split('/');
-    const monthFolder = parts[0]; // "11월"
-    const weekFolder = parts[1];  // "2째주"
-    const dateStr = parts[2];     // "2025-11-08"
-    const fileName = `${dateStr}.md`;
-    const filePath = `${monthFolder}/${weekFolder}/${fileName}`;
-    
-    // 오늘 파일 경로 저장
-    setTodayFilePath(filePath);
-
+  const expandFolders = (monthFolder, weekFolder) => {
     const foldersToExpand = [
       monthFolder,
       `${monthFolder}/${weekFolder}`
     ];
     setExpandedFolders(foldersToExpand);
+  }
 
-    // 파일 추가 로직
-    setFiles(prevFiles => {
-      const newFiles = [...prevFiles];
-      
-      // 월 폴더 찾기 또는 생성
-      let monthNode = newFiles.find(node => node.name === monthFolder && node.type === 'folder');
-      if (!monthNode) {
-        monthNode = {
-          name: monthFolder,
-          type: 'folder',
-          path: monthFolder,
-          children: []
-        };
-        newFiles.push(monthNode);
+  const createTodayContext = () => {
+    const { monthFolder, weekFolder, today, filePath } = createTitle();
+
+    expandFolders(monthFolder, weekFolder);
+    setTodayFilePath(filePath);
+    setTodayDatePrefix(today);
+
+    return { today, filePath };
+  };
+
+  const processDateSelected = async (dateStr, filePath) => {
+    const file = findFileByDate(dateStr);
+    if (file) {
+      await handleFileSelect(file);
+      return;
+    }
+
+    const newFile = {
+      name: `${dateStr}.md`,
+      path: filePath,
+      sha: null,
+      downloadUrl: null,
+      content: null,
+      savedAt: null
+    };
+    addFile(newFile);
+    await handleFileSelect(newFile);
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      navigate('/login');
+      return;
+    }
+
+    const loadOrReuseFiles = async () => {
+      const existingFiles = getAllFiles();
+      const params = new URLSearchParams(location.search);
+      const paramDate = params.get('date');
+
+      if (existingFiles && existingFiles.length <= 0) {
+        try {
+          const fileService = new GitHubFileService(token, owner, repo);
+          const mdFiles = await fileService.fetchAllMarkdownFiles();
+
+          setFileStore(mdFiles);
+        } catch (error) {
+          console.error('Failed to load files:', error);
+          showError(error.message);
+          navigate('/login');
+          return;
+        }
       }
 
-      // 주차 폴더 찾기 또는 생성
-      let weekNode = monthNode.children.find(node => node.name === weekFolder && node.type === 'folder');
-      if (!weekNode) {
-        weekNode = {
-          name: weekFolder,
-          type: 'folder',
-          path: `${monthFolder}/${weekFolder}`,
-          children: []
-        };
-        monthNode.children.push(weekNode);
+      if (paramDate) {
+        const dateObj = new Date(paramDate);
+        const { monthFolder, weekFolder, filePath } = createTitle(dateObj);
+        expandFolders(monthFolder, weekFolder);
+        await processDateSelected(paramDate, filePath);
+      } else {
+        const context = createTodayContext();
+        await processDateSelected(context.today, context.filePath);
       }
+    };
 
-      // 오늘 파일이 이미 있는지 확인
-      const fileExists = weekNode.children.some(node => node.name === fileName);
-      if (!fileExists) {
-        // 오늘 파일 추가 (임시 파일)
-        const newFile = {
-          name: fileName,
-          type: 'file',
-          path: filePath,
-          isDraft: true
-        };
-        weekNode.children.push(newFile);
-        
-        // 생성한 파일을 자동 선택
-        setSelectedFile(newFile);
-        setEditorMode(EDITOR_MODE.EDITABLE);
-        setLastSavedAt(null);
-      }
-
-      return newFiles;
-    });
-  }, []);
+    loadOrReuseFiles();
+  }, [isAuthenticated, token, owner, repo, navigate, showError, location.search]);
 
   const handleContentChange = (newContent) => {
     setContent(newContent);
@@ -122,10 +148,6 @@ const EditorPage = () => {
     setShowPreview(!showPreview);
   };
 
-  const handleInfoMessage = (message) => {
-    showInfo(message);
-  };
-
   const handleErrorMessage = (message) => {
     showError(message);
   };
@@ -138,45 +160,148 @@ const EditorPage = () => {
     setPreviewWidth(prev => Math.max(300, Math.min(800, prev - delta)));
   };
 
-  const handleFileSelect = (file) => {
-    setSelectedFile(file);
-    console.log('Selected file:', file);
-    // TODO: 파일 내용 로드
-    setTitle(file?.title ?? file?.name?.replace(/\.md$/i, '') ?? '');
-    setContent(file?.content ?? '');
-    const isEditable = Boolean(file?.isDraft);
-    setEditorMode(isEditable ? EDITOR_MODE.EDITABLE : EDITOR_MODE.READ_ONLY);
-    setLastSavedAt(file?.savedAt ?? null);
+  const setEditorState = ({ mode, title, content, savedAt }) => {
+    setEditorMode(mode);
+    setTitle(title);
+    setContent(content);
+    setLastSavedAt(savedAt);
   };
 
-  const handleSave = () => {
-    // TODO: GitHub에 파일 저장 로직
-    console.log('Saving...', { title, content });
-    showInfo('저장 중...');
+  const handleFileSelect = async (file) => {
+    setSelectedFile(file);
+
+    if (!file.sha) {
+      setEditorState({
+        mode: EDITOR_MODE.EDITABLE,
+        title: file.path.replace('.md', ' '),
+        content: '',
+        savedAt: null
+      });
+      return;
+    }
+
+    const cachedFile = getFile(file.path);
+    const needContent = !(cachedFile && cachedFile.content);
+    const needSavedAt = !(cachedFile && cachedFile.savedAt != null);
+
+    if (!needContent && !needSavedAt) {
+      setEditorState({
+        mode: EDITOR_MODE.READ_ONLY,
+        title: file.path.replace('.md', ''),
+        content: cachedFile.content,
+        savedAt: cachedFile.savedAt || null
+      });
+      return;
+    }
+
+    try {
+      const fileService = new GitHubFileService(token, owner, repo);
+      const tasks = [];
+      if (needContent) {
+        tasks.push(
+          fileService.fetchFileContent(file.path).then(f => {
+            updateFile(file.path, { content: f.content });
+            return { content: f.content };
+          })
+        );
+      }
+      if (needSavedAt) {
+        tasks.push(
+          fileService.getLastCommitTime(file.path).then(lastCommit => {
+            updateFile(file.path, { savedAt: lastCommit });
+            return { savedAt: lastCommit };
+          })
+        );
+      }
+      const results = await Promise.all(tasks);
+      const merged = results.reduce((acc, cur) => ({ ...acc, ...cur }), {});
+
+      setEditorState({
+        mode: EDITOR_MODE.READ_ONLY,
+        title: file.path.replace('.md', ''),
+        content: merged.content ?? cachedFile?.content ?? '',
+        savedAt: merged.savedAt ?? cachedFile?.savedAt ?? null
+      });
+    } catch (error) {
+      console.error('Failed to load file:', error);
+      showError(error.message);
+    }
+  };
+
+  const handleSave = async (force = false) => {
+    if (!force && !canSave) return;
     
-    // 저장 후 처리
-    // setIsReadOnly(true); // 나중에 읽기 전용 기능 추가 시
-    const savedAt = new Date().toISOString();
-    setLastSavedAt(savedAt);
-    setEditorMode(EDITOR_MODE.READ_ONLY);
-    setCanSave(false);
+    showInfo(INFO_MESSAGE.SAVING);
+    
+    try {
+      const fileService = new GitHubFileService(token, owner, repo);
+      
+      const trimmedTitle = title.trim();
+      const finalFilePath = `${trimmedTitle}.md`;
+      const commitMessage = `Add morning page: ${trimmedTitle}`;
+      
+      const sha = selectedFile?.sha || null;
+      const response = await fileService.saveFile(finalFilePath, content, commitMessage, sha);
+      
+      const savedAt = new Date().toISOString();
+      const fileName = finalFilePath.split('/').pop();
+      
+      const savedFileData = {
+        name: fileName,
+        path: finalFilePath,
+        sha: response?.content?.sha || 'saved',
+        content: content,
+        savedAt: savedAt,
+        downloadUrl: response?.content?.download_url || null
+      };
+      
+      if (selectedFile.path !== finalFilePath) {
+        const { removeFile } = useFileStore.getState();
+        removeFile(selectedFile.path);
+        addFile(savedFileData);
+      } else {
+        updateFile(finalFilePath, savedFileData);
+      }
+      
+      setLastSavedAt(savedAt);
+      setEditorMode(EDITOR_MODE.READ_ONLY);
+      setCanSave(false);
+      
+      // selectedFile 업데이트
+      setSelectedFile({ ...selectedFile, 
+        name: fileName, 
+        path: finalFilePath, 
+        sha: savedFileData.sha, 
+        savedAt 
+      });
+      
+      showInfo(INFO_MESSAGE.SAVE_SUCCESS);
+    } catch (error) {
+      console.error('Failed to save file:', error);
+      showError(error.message);
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
   };
 
   return (
     <div className="editor-page">
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      <Header username="username" repository="morningpage" />
+      <Header username={user?.name || user?.login || 'User'} repository={repo || 'repository'} />
       <TabNavigation />
       
       <div className="editor-page-content">
         <div className="editor-layout">
           <div className="file-tree-container" style={{ width: `${fileTreeWidth}px` }}>
-            <FileTree 
-              files={files} 
+          <FileTree 
+              tree={fileTree} 
               onFileSelect={handleFileSelect}
               selectedFile={selectedFile}
               initialExpandedFolders={expandedFolders}
               todayFilePath={todayFilePath}
+              todayDatePrefix={todayDatePrefix}
             />
           </div>
           
@@ -188,15 +313,14 @@ const EditorPage = () => {
               onTitleChange={handleTitleChange}
               content={content}
               onContentChange={handleContentChange}
-              onCanSave={handleCanSaveChange}
-              onTogglePreview={handleTogglePreview}
-              showPreview={showPreview}
-              onError={handleErrorMessage}
-              onInfo={handleInfoMessage}
-              onSave={handleSave}
               canSave={canSave}
-              isReadOnly={editorMode === EDITOR_MODE.READ_ONLY}
+              onCanSave={handleCanSaveChange}
+              onSave={handleSave}
               savedAt={lastSavedAt}
+              isReadOnly={editorMode === EDITOR_MODE.READ_ONLY}
+              showPreview={showPreview}
+              onTogglePreview={handleTogglePreview}
+              onError={handleErrorMessage}
             />
           </div>
 

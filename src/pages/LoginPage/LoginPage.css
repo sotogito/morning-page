@@ -1,22 +1,221 @@
 .login-page {
-  width: 100%;
-  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  color: #000;
+  background-image: url('/images/sukipi_village_hello.gif');
+  background-size: 110%;
+  background-position: 80% 25%;
+  background-repeat: no-repeat;
+  position: relative;
+  transition: background-position 0.3s ease, background-size 0.3s ease;
+}
+
+.login-page.modal-open {
+  background-position: 50% 70%;
+  background-size: 100%;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.3);
+  z-index: 0;
+}
+
+.login-card {
+  width: min(300px, 80vw);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-bg-primary);
+  gap: 30px;
+  margin-top: 50px;
+  position: relative;
+  z-index: 1;
 }
 
-.login-page h1 {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
+.login-title {
+  text-transform: lowercase;
+  font-size: 31px;
+  letter-spacing: 2px;
+  margin: 0 0 7px 0;
+  text-align: center;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
 }
 
-.login-page p {
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
+.login-label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+  margin-top: 20px;
+}
+
+.login-label:first-of-type {
+  margin-top: 0;
+}
+
+.login-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #000;
+  padding: 8px 0;
+  color: #000;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  background: transparent;
+  background-color: transparent;
+}
+
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  -webkit-text-fill-color: #000;
+  background-color: transparent;
+  background: transparent;
+}
+
+.login-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.login-button {
+  width: 100%;
+  margin-top: 30px;
+  padding: 11px 16px;
+  background-color: transparent;
+  color: #000;
+  border: 1px solid #000;
+  cursor: pointer;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.login-button:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+.login-button:active {
+  opacity: 0.8;
+}
+
+.login-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
+.login-error {
+  color: #ff0000;
+  font-size: 12px;
+  margin: 8px 0 0 0;
+  text-align: center;
+}
+
+.login-info-link {
+  background: none;
+  border: none;
+  color: orangered;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 8px;
+  text-align: left;
+  transition: all 0.2s ease;
+  display: inline-block;
+  width: fit-content;
+  align-self: flex-start;
+  line-height: 1.4;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.login-info-link:hover {
+  color: #e5ff00;
+  background-color: #00e1ff;
+  text-decoration: none;
+  padding: 0;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  letter-spacing: -0.2px;
+}
+
+.modal-info-content {
+  color: #000;
+  line-height: 1.8;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-content::selection,
+.modal-info-content *::selection {
+  background-color: rgb(255, 255, 168);
+  color: #000;
+}
+
+.modal-info-header {
+  font-size: 30px;
+  font-weight: 600;
+  margin: 0 0 24px 0;
+  text-align: center;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-title:not(:first-child) {
+  margin-top: 32px;
+}
+
+.modal-info-text {
+  font-size: 14px;
+  margin: 0 0 16px 0;
+  line-height: 1.8;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-list {
+  margin: 16px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.modal-info-list li {
+  font-size: 14px;
+  margin-bottom: 8px;
+  line-height: 1.8;
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.modal-info-quote {
+  margin: 24px 0 0 0;
+  padding: 16px 20px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-left: 3px solid rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  line-height: 1.8;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.8);
+  font-family: 'Playfair Display', 'Austin News Deck Web', serif;
 }
 

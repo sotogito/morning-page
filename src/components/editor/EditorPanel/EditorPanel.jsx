@@ -1,29 +1,26 @@
 import { useState, useEffect } from 'react';
 import './EditorPanel.css';
 import { ERROR_MESSAGE } from '../../../constants/ErrorMessage';
-import { INFO_MESSAGE } from '../../../constants/InfoMessage';
 
 const EditorPanel = ({
   title = '',
   onTitleChange,
   content = '',
-  onCanSave,
   onContentChange,
-  onTogglePreview,
-  showPreview = false,
-  onError,
-  onInfo,
-  onSave,
   canSave = false,
-  isReadOnly = false,
+  onCanSave,
+  onSave,
   savedAt = null,
+  isReadOnly = false,
+  showPreview = false,
+  onTogglePreview,
+  onError,
 }) => {
   const [charCount, setCharCount] = useState(0);
-  const [remainingTime, setRemainingTime] = useState(1800); //30분
   const minCharCount = 1000;
 
   useEffect(() => {
-    setCharCount(content.length);
+    setCharCount(content?.length || 0);
   }, [content]);
 
   useEffect(() => {
@@ -36,35 +33,15 @@ const EditorPanel = ({
     onCanSave?.(canSaveNow);
   }, [charCount, isReadOnly, minCharCount, onCanSave]);
 
-  useEffect(() => {
-    if (isReadOnly) {
-      setRemainingTime(1800);
-      return;
-    }
-
-    const timerId = setInterval(() => {
-      setRemainingTime((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerId);
-          onInfo?.(INFO_MESSAGE.WRITE_TIMEOUT);
-          onSave?.();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timerId);
-  }, [isReadOnly]);
-
   const handleContentChange = (e) => {
     if (isReadOnly) {
       return;
     }
 
     const newContent = e.target.value;
+    const currentLength = content?.length || 0;
     
-    if (newContent.length < content.length) {
+    if (newContent.length < currentLength) {
       onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
       return;
     }
@@ -101,12 +78,6 @@ const EditorPanel = ({
     }
   };
 
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
-
   const formatSavedAt = (timestamp) => {
     if (!timestamp) {
       return '저장 이력이 없습니다';
@@ -126,7 +97,7 @@ const EditorPanel = ({
         <input
           type="text"
           className={`editor-title ${isReadOnly ? 'read-only' : ''}`}
-          value={title}
+          value={title || ''}
           onChange={handleTitleChange}
           placeholder="제목을 입력하세요"
           disabled={isReadOnly}
@@ -144,7 +115,7 @@ const EditorPanel = ({
       <div className="editor-body">
         <textarea
           className={`editor-textarea ${isReadOnly ? 'read-only' : ''}`}
-          value={content}
+          value={content || ''}
           onChange={handleContentChange}
           onKeyDown={handleContentDelete}
           placeholder="글을 작성하세요..."
@@ -160,10 +131,8 @@ const EditorPanel = ({
           <span className="char-limit"> / {minCharCount.toLocaleString()}자</span>
         </div>
         <div className="footer-actions">
-          {isReadOnly ? (
+          {isReadOnly && (
             <span className="saved-time">{formatSavedAt(savedAt)}</span>
-          ) : (
-            <span className="timer">{formatTime(remainingTime)}</span>
           )}
           <button 
             className="save-button" 
