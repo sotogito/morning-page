@@ -88,14 +88,14 @@ export class GitHubFileService {
    * @param {string|null} sha - 기존 파일의 SHA (업데이트 시 필요)
    * @returns {Promise<Object>}
    */
-  async saveFile(path, content, message, sha = null) {
+  async saveFile(path, content, sha = null) {
     try {
       const endpoint = ENDPOINTS.contents(this.owner, this.repo, path);
   
       const base64Content = encodeToBase64(content);
 
       const data = {
-        message,
+        message: `Add morning page: ${path}`,
         content: base64Content,
       };
       if (sha) {
