@@ -34,18 +34,28 @@
   display: flex;
   flex-direction: column;
   gap: 30px;
-  margin-top: 50px;
+  margin-top: 40px;
   position: relative;
   z-index: 1;
 }
 
 .login-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   text-transform: lowercase;
   font-size: 31px;
   letter-spacing: 2px;
   margin: 0 0 7px 0;
-  text-align: center;
+  text-align: left;
   font-family: 'Playfair Display', 'Austin News Deck Web', serif;
+}
+
+.login-logo {
+  width: 130px;
+  object-fit: contain;
+  margin-left: -10px;
 }
 
 .login-label {

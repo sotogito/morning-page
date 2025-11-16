@@ -51,7 +51,10 @@ const LoginPage = () => {
     <>
       <div className={`login-page ${isModalOpen || isHoveringInfo ? 'modal-open' : ''}`}>
         <div className="login-card">
-          <h1 className="login-title">morning page 🌞</h1>
+          <h1 className="login-title">
+            morning<br/>page
+            <img src="/images/logo_sun.png" alt="morning page logo" className="login-logo" />
+          </h1>
 
           <form onSubmit={handleLogin}>
             <label className="login-label" htmlFor="repository">
