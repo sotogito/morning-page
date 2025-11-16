@@ -16,6 +16,7 @@ const FavoritesPage = () => {
   const { toasts, showError, showInfo, removeToast } = useToast();
   
   const [favorites, setFavorites] = useState([]);
+  const [initialFavorites, setInitialFavorites] = useState([]);
   const [inputPath, setInputPath] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -44,7 +45,9 @@ const FavoritesPage = () => {
 
         const favoritesFile = await favoritesService.fetchFavorites();
         if (favoritesFile) {
-          setFavorites(favoritesFile.data.paths || []);
+          const paths = favoritesFile.data.paths || [];
+          setFavorites(paths);
+          setInitialFavorites(paths);
           setSha(favoritesFile.sha);
         }
       } catch (error) {
@@ -89,11 +92,21 @@ const FavoritesPage = () => {
         return;
       }
 
+      const hasChanges = 
+        validPaths.length !== initialFavorites.length ||
+        validPaths.some((path, index) => path !== initialFavorites[index]);
+
+      if (!hasChanges) {
+        showInfo('변경사항이 없습니다.');
+        return;
+      }
+
       const favoritesService = new FavoritesService(token, owner, repo);
       const result = await favoritesService.saveFavorites(validPaths, sha);
       
       setSha(result.content.sha);
       setFavorites(validPaths);
+      setInitialFavorites(validPaths);
       showInfo('즐겨찾기가 저장되었습니다.');
     } catch (error) {
       console.error('Failed to save favorites:', error);
