@@ -14,7 +14,14 @@ const TabNavigation = () => {
       >
         에디터
       </Link>
-    
+
+      <Link
+        to="/favorites"
+        className={cx('tab-button', { active: isActive('/favorites') })}
+      >
+        즐겨찾기
+      </Link>
+
       <Link
         to="/statistics"
         className={cx('tab-button', { active: isActive('/statistics') })}

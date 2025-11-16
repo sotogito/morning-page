@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import Heatmap from '../../components/statistics/Heatmap/Heatmap';
+import StatsOverview from '../../components/statistics/StatsOverview/StatsOverview';
 import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
 import { GitHubFileService } from '../../services/githubFileService';
+import { StatsService } from '../../services/statsService';
 import { buildHeatmapData } from '../../utils/heatmapUtils';
 import './StatisticsPage.css';
 
@@ -18,6 +20,10 @@ const StatisticsPage = () => {
   const requestedPathsRef = useRef(new Set());
   const loggedOnceRef = useRef(false);
   
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
+  
   const heatmapData = useMemo(() => {
     const data = buildHeatmapData(files);
     return data.map(item => ({
@@ -29,6 +35,42 @@ const StatisticsPage = () => {
   useEffect(() => {
     if (!isAuthenticated || !token) {
       navigate('/login');
+      return;
+    }
+
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        setStatsError(false);
+        
+        const statsService = new StatsService(token, owner, repo);
+        
+        const hasMorningPageFolder = await statsService.checkMorningPageFolder();
+        if (!hasMorningPageFolder) {
+          setStatsError(true);
+          setStatsLoading(false);
+          return;
+        }
+        
+        const statsFile = await statsService.fetchStats();
+        if (statsFile) {
+          setStats(statsFile.data);
+        } else {
+          setStatsError(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        setStatsError(true);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [isAuthenticated, token, owner, repo, navigate]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
       return;
     }
 
@@ -73,6 +115,11 @@ const StatisticsPage = () => {
       <TabNavigation />
       <div className="statistics-page-content">
         <Heatmap data={heatmapData} />
+        <StatsOverview 
+          stats={stats}
+          error={statsError}
+          loading={statsLoading}
+        />
       </div>
     </div>
   );

@@ -238,10 +238,9 @@ const EditorPage = () => {
       
       const trimmedTitle = title.trim();
       const finalFilePath = `${trimmedTitle}.md`;
-      const commitMessage = `Add morning page: ${trimmedTitle}`;
       
       const sha = selectedFile?.sha || null;
-      const response = await fileService.saveFile(finalFilePath, content, commitMessage, sha);
+      const response = await fileService.saveFile(finalFilePath, content, sha);
       
       const savedAt = new Date().toISOString();
       const fileName = finalFilePath.split('/').pop();
