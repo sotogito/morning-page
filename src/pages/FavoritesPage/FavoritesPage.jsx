@@ -224,9 +224,11 @@ const FavoritesPage = () => {
             )}
           </div>
 
-          <button className="favorites-save-btn" onClick={handleSave}>
-            저장하기
-          </button>
+          <div className="favorites-save-wrapper">
+            <button className="favorites-save-btn" onClick={handleSave}>
+              저장하기
+            </button>
+          </div>
         </div>
         </div>
       </div>
