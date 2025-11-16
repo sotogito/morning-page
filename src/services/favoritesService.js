@@ -1,5 +1,6 @@
 import { GitHubClient } from './githubClient';
 import { encodeToBase64, decodeFromBase64 } from '../utils/base64Utils';
+import { COMMIT_MESSAGE } from '../constants/CommitMessage';
 
 const FAVORITES_PATH = '.morningpage/favorites.json';
 
@@ -71,7 +72,7 @@ export class FavoritesService {
       const base64Content = encodeToBase64(content);
 
       const data = {
-        message: 'Update favorites',
+        message: COMMIT_MESSAGE.UPDATE_FAVORITES,
         content: base64Content,
       };
       

@@ -1,6 +1,7 @@
 import { GitHubClient } from './githubClient';
 import { GithubFile } from '../models/GithubFile';
 import { ERROR_MESSAGE } from '../constants/ErrorMessage';
+import { COMMIT_MESSAGE } from '../constants/CommitMessage';
 import { StatsService } from './statsService';
 import { encodeToBase64 } from '../utils/base64Utils';
 
@@ -95,7 +96,7 @@ export class GitHubFileService {
       const base64Content = encodeToBase64(content);
 
       const data = {
-        message: `Add morning page: ${path}`,
+        message: COMMIT_MESSAGE.ADD_MORNING_PAGE(path),
         content: base64Content,
       };
       if (sha) {

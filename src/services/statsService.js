@@ -1,6 +1,7 @@
 import { GitHubClient } from './githubClient';
 import { getTodayString, isSameDay, isNextDay } from '../utils/dateUtils';
 import { encodeToBase64, decodeFromBase64 } from '../utils/base64Utils';
+import { COMMIT_MESSAGE } from '../constants/CommitMessage';
 
 const STATS_PATH = '.morningpage/stats.json';
 
@@ -73,7 +74,7 @@ export class StatsService {
       const base64Content = encodeToBase64(content);
 
       const data = {
-        message: 'Update stats',
+        message: COMMIT_MESSAGE.UPDATE_STATS,
         content: base64Content,
       };
       
