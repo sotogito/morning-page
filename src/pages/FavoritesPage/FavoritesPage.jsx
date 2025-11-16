@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import ToastContainer from '../../components/common/Message/ToastContainer';
+import { INFO_MESSAGE } from '../../constants/InfoMessage';
+import { ERROR_MESSAGE } from '../../constants/ErrorMessage';
 import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
 import { FavoritesService } from '../../services/favoritesService';
@@ -70,7 +72,7 @@ const FavoritesPage = () => {
     }
     
     if (favorites.includes(path)) {
-      showError('이미 즐겨찾기에 추가된 파일입니다.');
+      showError(ERROR_MESSAGE.ALREADT_ADDED_FILE_TO_FAVORITES);
       return;
     }
 
@@ -87,8 +89,7 @@ const FavoritesPage = () => {
       const validPaths = favorites.filter(path => filesMap.has(path));
       
       if (validPaths.length < favorites.length) {
-        const invalidPaths = favorites.filter(path => !filesMap.has(path));
-        showError(`존재하지 않는 파일이 있습니다:\n${invalidPaths.join('\n')}`);
+        showError(ERROR_MESSAGE.NON_EXISTENT_FILE);
         return;
       }
 
@@ -97,7 +98,7 @@ const FavoritesPage = () => {
         validPaths.some((path, index) => path !== initialFavorites[index]);
 
       if (!hasChanges) {
-        showInfo('변경사항이 없습니다.');
+        showInfo(INFO_MESSAGE.NO_CHANGE_FAVORITES);
         return;
       }
 
@@ -107,7 +108,7 @@ const FavoritesPage = () => {
       setSha(result.content.sha);
       setFavorites(validPaths);
       setInitialFavorites(validPaths);
-      showInfo('즐겨찾기가 저장되었습니다.');
+      showInfo(INFO_MESSAGE.FAVORITES_ADD_SUCCESS);
     } catch (error) {
       console.error('Failed to save favorites:', error);
       showError('즐겨찾기 저장에 실패했습니다.');

@@ -9,4 +9,7 @@ export const ERROR_MESSAGE = {
 
     DELETE_TEXT_FAIL: "작성한 글은 지울 수 없어요.",
 
+    ALREADT_ADDED_FILE_TO_FAVORITES: "이미 즐겨찾기에 추가된 파일입니다.",
+    NON_EXISTENT_FILE: "존재하지 않는 파일이 있습니다.",
+    
 };
