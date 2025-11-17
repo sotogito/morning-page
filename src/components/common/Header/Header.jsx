@@ -5,7 +5,7 @@ const Header = ({ username = 'username', repository = 'repository' }) => {
     <header className="header">
       <div className="header-left">
         <h1 className="header-logo">
-          morning page
+          Morning Page
           <img
             src="/images/logo_sun.png"
             alt="morning page logo"
