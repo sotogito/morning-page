@@ -93,7 +93,9 @@ const LoginPage = () => {
               {isLoading ? '로그인 중...' : '로그인'}
             </button>
           </form>
-          
+        </div>
+        
+        <div className="login-info-links">
           <button 
             className="login-info-link"
             onClick={() => setIsModalOpen(true)}
@@ -102,6 +104,16 @@ const LoginPage = () => {
           >
             모닝페이지란?
           </button>
+          <a
+            className="login-info-link"
+            href="https://excellent-patient-a36.notion.site/2aebf45724798023a8fee4fd43e79b8e?source=copy_link"
+            target="_blank"
+            rel="noopener noreferrer"
+            onMouseEnter={() => setIsHoveringInfo(true)}
+            onMouseLeave={() => !isModalOpen && setIsHoveringInfo(false)}
+          >
+            모닝페이지 사용 가이드
+          </a>
         </div>
       </div>
       <ToastContainer toasts={toasts} onClose={removeToast} />

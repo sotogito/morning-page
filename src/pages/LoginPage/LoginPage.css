@@ -1,6 +1,7 @@
 .login-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   background-color: #fff;
@@ -136,11 +137,21 @@
   text-align: center;
 }
 
+.login-info-links {
+  width: min(300px, 80vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 20px;
+  position: relative;
+  z-index: 1;
+}
+
 .login-info-link {
   background: none;
   border: none;
   color: orangered;
-  font-size: 14px;
+  font-size: 13px;
   text-decoration: underline;
   cursor: pointer;
   padding: 0;
@@ -149,7 +160,6 @@
   transition: all 0.2s ease;
   display: inline-block;
   width: fit-content;
-  align-self: flex-start;
   line-height: 1.4;
   font-family: 'Playfair Display', 'Austin News Deck Web', serif;
 }
