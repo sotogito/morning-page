@@ -99,12 +99,16 @@
     padding: 0 var(--spacing-sm);
   }
 
+  .header-left {
+    margin-left: var(--spacing-sm);
+  }
+
   .header-logo {
-    font-size: 16px;
+    font-size: 17px;
   }
 
   .header-logo-image {
-    width: 26px;
+    width: 32px;
   }
 
   .header-repo {
