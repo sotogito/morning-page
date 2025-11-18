@@ -51,7 +51,6 @@ const EditorPage = () => {
               onFileSelect={editorController.handleFileSelect}
               selectedFile={editorController.selectedFile}
               initialExpandedFolders={editorController.expandedFolders}
-              todayFilePath={editorController.todayFilePath}
               todayDatePrefix={editorController.todayDatePrefix}
             />
           </div>

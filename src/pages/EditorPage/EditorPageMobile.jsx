@@ -70,7 +70,6 @@ const EditorPageMobile = () => {
                 onFileSelect={handleFileSelect}
                 selectedFile={editor.selectedFile}
                 initialExpandedFolders={editor.expandedFolders}
-                todayFilePath={editor.todayFilePath}
                 todayDatePrefix={editor.todayDatePrefix}
               />
             </div>

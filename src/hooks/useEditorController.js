@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useFileStore } from '../store/fileStore';
 import { GitHubFileService } from '../services/githubFileService';
-import { createTitle } from '../utils/dateTitleFormatter';
+import { createTodayTitle, createTitle } from '../utils/dateTitleFormatter';
 import { buildFileTree, sortTreeDescending } from '../utils/fileTreeUtils';
 import { INFO_MESSAGE } from '../constants/InfoMessage';
 
@@ -30,7 +30,6 @@ export const useEditorController = ({ showError, showInfo }) => {
   const [canSave, setCanSave] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [expandedFolders, setExpandedFolders] = useState([]);
-  const [todayFilePath, setTodayFilePath] = useState('');
   const [todayDatePrefix, setTodayDatePrefix] = useState('');
   const [editorMode, setEditorMode] = useState(EDITOR_MODE.EDITABLE);
   const [lastSavedAt, setLastSavedAt] = useState(null);
@@ -49,14 +48,6 @@ export const useEditorController = ({ showError, showInfo }) => {
       `${monthFolder}/${weekFolder}`
     ];
     setExpandedFolders(foldersToExpand);
-  };
-
-  const createTodayContext = () => {
-    const { monthFolder, weekFolder, today, filePath } = createTitle();
-    expandFolders(monthFolder, weekFolder);
-    setTodayFilePath(filePath);
-    setTodayDatePrefix(today);
-    return { today, filePath };
   };
 
   const setEditorState = ({ mode, title, content, savedAt }) => {
@@ -245,9 +236,11 @@ export const useEditorController = ({ showError, showInfo }) => {
         expandFolders(monthFolder, weekFolder);
         await processDateSelected(paramDate, filePath);
       } else {
-        const context = createTodayContext();
-        await processDateSelected(context.today, context.filePath);
+        const { monthFolder, weekFolder, targetDate, filePath } = createTitle();
+        expandFolders(monthFolder, weekFolder);
+        await processDateSelected(targetDate, filePath);
       }
+      setTodayDatePrefix(createTodayTitle());
     };
 
     loadOrReuseFiles();
@@ -259,7 +252,6 @@ export const useEditorController = ({ showError, showInfo }) => {
     canSave,
     selectedFile,
     expandedFolders,
-    todayFilePath,
     todayDatePrefix,
     editorMode,
     lastSavedAt,
@@ -272,5 +264,5 @@ export const useEditorController = ({ showError, showInfo }) => {
     handleTitleChange,
     handleCanSaveChange,
   }
-  
+
 };
