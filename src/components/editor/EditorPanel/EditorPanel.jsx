@@ -2,6 +2,35 @@ import { useState, useEffect } from 'react';
 import './EditorPanel.css';
 import { ERROR_MESSAGE } from '../../../constants/ErrorMessage';
 
+const MAX_TITLE_LENGTH = 50;
+const MAX_CONTENT_LENGTH = 30000;
+const DATE_PREFIX_REGEX = /^.*?\d{4}-\d{2}-\d{2}\s?/;
+
+const extractUserTitle = (value) => {
+  const match = value.match(/\d{4}-\d{2}-\d{2}/);
+  if (!match) return value;
+  return value.slice(match.index + match[0].length).trimStart();
+};
+
+const isTitlePrefixIntact = (currentTitle, nextTitle) => {
+  const prefixMatch = currentTitle.match(DATE_PREFIX_REGEX);
+  if (prefixMatch) {
+    const requiredPrefix = prefixMatch[0];
+    if (!nextTitle.startsWith(requiredPrefix)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const isTitleTooLong = (nextTitle) => {
+  const userTitle = extractUserTitle(nextTitle);
+  return userTitle.length > MAX_TITLE_LENGTH;
+};
+
+const isContentTooLong = (nextContent) => 
+  nextContent.length > MAX_CONTENT_LENGTH;
+
 const EditorPanel = ({
   title = '',
   onTitleChange,
@@ -39,6 +68,10 @@ const EditorPanel = ({
     }
 
     const newContent = e.target.value;
+    if (isContentTooLong(newContent)) {
+      onError?.(ERROR_MESSAGE.CONTENT_LIMIT_EXCEEDED(MAX_CONTENT_LENGTH));
+      return;
+    }
     onContentChange?.(newContent);
   };
 
@@ -47,7 +80,18 @@ const EditorPanel = ({
       return;
     }
 
-    onTitleChange?.(e.target.value);
+    const newTitle = e.target.value;
+    if (!isTitlePrefixIntact(title, newTitle)) {
+      onError?.(ERROR_MESSAGE.TITLE_PREFIX_IMMUTABLE);
+      return;
+    }
+
+    if (isTitleTooLong(newTitle)) {
+      onError?.(ERROR_MESSAGE.TITLE_LIMIT_EXCEEDED(MAX_TITLE_LENGTH));
+      return;
+    }
+
+    onTitleChange?.(newTitle);
   };
 
   const handleContentDelete = (e) => {
