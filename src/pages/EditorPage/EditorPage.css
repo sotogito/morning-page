@@ -35,6 +35,119 @@
   overflow: hidden;
 }
 
+.editor-page-mobile {
+  height: 100vh;
+}
+
+.editor-mobile-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-page-mobile .editor-panel {
+  height: 100%;
+}
+
+.mobile-filetree-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 80%;
+  background: var(--color-bg-primary);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -12px 30px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-overlay);
+}
+
+.mobile-filetree-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: calc(var(--z-overlay) - 1);
+}
+
+.mobile-filetree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mobile-filetree-close {
+  background: transparent;
+  border: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.mobile-filetree-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.editor-page-mobile .file-button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-xs);
+}
+
+.editor-floating-file-button {
+  position: absolute;
+  left: var(--spacing-md);
+  bottom: 80px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+.editor-page-mobile .editor-actions {
+  display: none;
+}
+
+.editor-page-mobile .editor-title {
+  font-size: var(--font-size-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.editor-page-mobile .editor-body {
+  padding: var(--spacing-md);
+}
+
+.editor-page-mobile .editor-textarea {
+  font-size: var(--font-size-md);
+}
+
+.editor-page-mobile .editor-footer {
+  padding: var(--spacing-md);
+}
+
+.editor-page-mobile .char-counter,
+.editor-page-mobile .char-limit,
+.editor-page-mobile .saved-time {
+  font-size: var(--font-size-xs);
+}
+
+.editor-page-mobile .save-button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-xs);
+}
+
 .statistics-layout {
   flex: 1;
   overflow-y: auto;
