@@ -39,13 +39,6 @@ const EditorPanel = ({
     }
 
     const newContent = e.target.value;
-    const currentLength = content?.length || 0;
-    
-    if (newContent.length < currentLength) {
-      onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
-      return;
-    }
-    
     onContentChange?.(newContent);
   };
 
