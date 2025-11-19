@@ -8,8 +8,11 @@ export const ERROR_MESSAGE = {
     FAIL_SAVE_FILE: "파일 저장에 실패했습니다. 페이지를 새로고침합니다.",
 
     DELETE_TEXT_FAIL: "작성한 글은 지울 수 없어요.",
+    TITLE_LIMIT_EXCEEDED: (maxLength) => `제목은 최대 ${maxLength}자까지 작성할 수 있어요.`,
+    CONTENT_LIMIT_EXCEEDED: (maxLength) => `본문은 최대 ${maxLength.toLocaleString()}자까지 작성할 수 있어요.`,
+    TITLE_PREFIX_IMMUTABLE: "기본 날짜 제목은 삭제할 수 없습니다.",
 
     ALREADT_ADDED_FILE_TO_FAVORITES: "이미 즐겨찾기에 추가된 파일입니다.",
-    NON_EXISTENT_FILE: "존재하지 않는 파일이 있습니다.",
+    NON_EXISTENT_FILE: "존재하지 않는 파일이 있습니다. \n 제외하고 저장을 진행합니다.",
     
 };

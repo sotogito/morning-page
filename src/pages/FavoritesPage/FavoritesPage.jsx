@@ -90,7 +90,7 @@ const FavoritesPage = () => {
       
       if (validPaths.length < favorites.length) {
         showError(ERROR_MESSAGE.NON_EXISTENT_FILE);
-        return;
+        setFavorites(validPaths);
       }
 
       const hasChanges = 

@@ -14,13 +14,14 @@ const Header = ({ username = 'username', repository = 'repository' }) => {
         </h1>
       </div>
       <div className="header-right">
-        <span className="header-repo">
-          {username} / {repository}
-        </span>
+        <div className="header-repo">
+          <span className="header-repo-username">{username}</span>
+          <span className="header-repo-separator"> / </span>
+          <span className="header-repo-name">{repository}</span>
+        </div>
       </div>
     </header>
   );
 };
 
 export default Header;
-
