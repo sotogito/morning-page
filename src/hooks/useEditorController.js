@@ -12,6 +12,31 @@ const EDITOR_MODE = Object.freeze({
   READ_ONLY: 'readOnly',
 });
 
+const stripMd = (path) => path.replace('.md', '');
+
+const buildFinalFilePath = (title) => {
+  const trimmed = title.trim();
+  return `${trimmed}.md`;
+};
+
+const checkCacheNeeds = (cachedFile) => {
+  return {
+    needContent: !(cachedFile && cachedFile.content),
+    needSavedAt: !(cachedFile && cachedFile.savedAt != null)
+  };
+};
+
+const mergeResults = (results) => {
+  return results.reduce((acc, cur) => ({ ...acc, ...cur }), {});
+};
+
+const mergeFileData = (cachedFile, fetched) => {
+  return {
+    content: fetched.content ?? cachedFile?.content ?? '',
+    savedAt: fetched.savedAt ?? cachedFile?.savedAt ?? null
+  };
+};
+
 export const useEditorController = ({ showError, showInfo }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,8 +64,26 @@ export const useEditorController = ({ showError, showInfo }) => {
   const fileTree = useMemo(() => {
     if (files.length === 0) return [];
     const builtTree = buildFileTree(files);
+    
     return sortTreeDescending(builtTree);
   }, [files]);
+
+  const buildSavedFileData = (filePath, response, content) => {
+    const savedAt = new Date().toISOString();
+    const fileName = filePath.split('/').pop();
+
+    return {
+      fileData: {
+        name: fileName,
+        path: filePath,
+        sha: response?.content?.sha || 'saved',
+        content: content,
+        savedAt,
+        downloadUrl: response?.content?.download_url || null
+      },
+      savedAt
+    };
+  };
 
   const expandFolders = (monthFolder, weekFolder) => {
     const foldersToExpand = [
@@ -57,65 +100,30 @@ export const useEditorController = ({ showError, showInfo }) => {
     setLastSavedAt(savedAt);
   };
 
-  const handleFileSelect = async (file) => {
-    setSelectedFile(file);
+  const fetchMissingFileData = async (path, { needContent, needSavedAt }) => {
+    const fileService = new GitHubFileService(token, owner, repo);
+    const tasks = [];
 
-    if (!file.sha) {
-      setEditorState({
-        mode: EDITOR_MODE.EDITABLE,
-        title: file.path.replace('.md', ' '),
-        content: '',
-        savedAt: null
-      });
-      return;
+    if (needContent) {
+      tasks.push(
+        fileService.fetchFileContent(path).then(f => {
+          updateFile(path, { content: f.content });
+          return { content: f.content };
+        })
+      );
     }
 
-    const cachedFile = getFile(file.path);
-    const needContent = !(cachedFile && cachedFile.content);
-    const needSavedAt = !(cachedFile && cachedFile.savedAt != null);
-
-    if (!needContent && !needSavedAt) {
-      setEditorState({
-        mode: EDITOR_MODE.READ_ONLY,
-        title: file.path.replace('.md', ''),
-        content: cachedFile.content,
-        savedAt: cachedFile.savedAt || null
-      });
-      return;
+    if (needSavedAt) {
+      tasks.push(
+        fileService.getLastCommitTime(path).then(t => {
+          updateFile(path, { savedAt: t });
+          return { savedAt: t };
+        })
+      );
     }
 
-    try {
-      const fileService = new GitHubFileService(token, owner, repo);
-      const tasks = [];
-      if (needContent) {
-        tasks.push(
-          fileService.fetchFileContent(file.path).then(f => {
-            updateFile(file.path, { content: f.content });
-            return { content: f.content };
-          })
-        );
-      }
-      if (needSavedAt) {
-        tasks.push(
-          fileService.getLastCommitTime(file.path).then(lastCommit => {
-            updateFile(file.path, { savedAt: lastCommit });
-            return { savedAt: lastCommit };
-          })
-        );
-      }
-      const results = await Promise.all(tasks);
-      const merged = results.reduce((acc, cur) => ({ ...acc, ...cur }), {});
-
-      setEditorState({
-        mode: EDITOR_MODE.READ_ONLY,
-        title: file.path.replace('.md', ''),
-        content: merged.content ?? cachedFile?.content ?? '',
-        savedAt: merged.savedAt ?? cachedFile?.savedAt ?? null
-      });
-    } catch (error) {
-      console.error('Failed to load file:', error);
-      showError(error.message);
-    }
+    const results = await Promise.all(tasks);
+    return mergeResults(results);
   };
 
   const processDateSelected = async (dateStr, filePath) => {
@@ -137,61 +145,28 @@ export const useEditorController = ({ showError, showInfo }) => {
     await handleFileSelect(newFile);
   };
 
-  const handleSave = async (force = false) => {
-    if (!force && !canSave) return;
-    
-    showInfo(INFO_MESSAGE.SAVING);
-    
-    try {
-      const fileService = new GitHubFileService(token, owner, repo);
-      
-      const trimmedTitle = title.trim();
-      const finalFilePath = `${trimmedTitle}.md`;
-      
-      const sha = selectedFile?.sha || null;
-      const response = await fileService.saveFile(finalFilePath, content, sha);
-      
-      const savedAt = new Date().toISOString();
-      const fileName = finalFilePath.split('/').pop();
-      
-      const savedFileData = {
-        name: fileName,
-        path: finalFilePath,
-        sha: response?.content?.sha || 'saved',
-        content: content,
-        savedAt: savedAt,
-        downloadUrl: response?.content?.download_url || null
-      };
-      
-      if (selectedFile.path !== finalFilePath) {
-        const { removeFile } = useFileStore.getState();
-        removeFile(selectedFile.path);
-        addFile(savedFileData);
-      } else {
-        updateFile(finalFilePath, savedFileData);
-      }
-      
-      setLastSavedAt(savedAt);
-      setEditorMode(EDITOR_MODE.READ_ONLY);
-      setCanSave(false);
-      
-      setSelectedFile({ 
-        ...selectedFile, 
-        name: fileName, 
-        path: finalFilePath, 
-        sha: savedFileData.sha, 
-        savedAt 
-      });
-      
-      showInfo(INFO_MESSAGE.SAVE_SUCCESS);
-    } catch (error) {
-      console.error('Failed to save file:', error);
-      showError(error.message);
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+  const updateFileStore = (savedFileData, oldFilePath) => {
+    if (oldFilePath !== savedFileData.path) {
+      const { removeFile } = useFileStore.getState();
+      removeFile(oldFilePath);
+      addFile(savedFileData);
+    } else {
+      updateFile(savedFileData.path, savedFileData);
     }
+  };
+
+  const updateEditorState = (savedAt, savedFileData) => {
+    setLastSavedAt(savedAt);
+    setEditorMode(EDITOR_MODE.READ_ONLY);
+    setCanSave(false);
+
+    setSelectedFile((prev) => ({
+      ...prev,
+      name: savedFileData.name,
+      path: savedFileData.path,
+      sha: savedFileData.sha,
+      savedAt,
+    }));
   };
 
   const handleContentChange = (newContent) => {
@@ -204,6 +179,78 @@ export const useEditorController = ({ showError, showInfo }) => {
 
   const handleCanSaveChange = (canSave) => {
     setCanSave(canSave);
+  };
+
+  const handleFileSelect = async (file) => {
+    setSelectedFile(file);
+
+    const isInitFile = !file.sha;
+    if (isInitFile) {
+      setEditorState({
+        mode: EDITOR_MODE.EDITABLE,
+        title: file.path.replace('.md', ' '),
+        content: '',
+        savedAt: null
+      });
+      return;
+    }
+
+    const cachedFile = getFile(file.path);
+    const { needContent, needSavedAt } = checkCacheNeeds(cachedFile);
+
+    const isContainCache = !needContent && !needSavedAt;
+    if (isContainCache) {
+      setEditorState({
+        mode: EDITOR_MODE.READ_ONLY,
+        title: stripMd(file.path),
+        content: cachedFile.content,
+        savedAt: cachedFile.savedAt
+      });
+      return;
+    }
+
+    try {
+      const fetched = await fetchMissingFileData(file.path, { needContent, needSavedAt });
+      const merged = mergeFileData(cachedFile, fetched);
+
+      setEditorState({
+        mode: EDITOR_MODE.READ_ONLY,
+        title: stripMd(file.path),
+        content: merged.content,
+        savedAt: merged.savedAt
+      });
+    } catch (err) {
+      console.error(err);
+      showError(err.message);
+    }
+  };
+
+  const handleSave = async (force = false) => {
+    if (!force && !canSave) return;
+    
+    showInfo(INFO_MESSAGE.SAVING);
+    
+    try {
+      const fileService = new GitHubFileService(token, owner, repo);
+    
+      const finalFilePath = buildFinalFilePath(title);
+      const sha = selectedFile?.sha || null;
+      const response = await fileService.saveFile(finalFilePath, content, sha);
+      
+      const { fileData, savedAt } = buildSavedFileData(finalFilePath, response, content);
+      
+      updateFileStore(fileData, selectedFile.path);
+      updateEditorState(savedAt, fileData);
+      
+      showInfo(INFO_MESSAGE.SAVE_SUCCESS);
+    } catch (error) {
+      console.error('Failed to save file:', error);
+      showError(error.message);
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
   };
 
   useEffect(() => {
@@ -221,6 +268,7 @@ export const useEditorController = ({ showError, showInfo }) => {
         try {
           const fileService = new GitHubFileService(token, owner, repo);
           const mdFiles = await fileService.fetchAllMarkdownFiles();
+
           setFileStore(mdFiles);
         } catch (error) {
           console.error('Failed to load files:', error);
@@ -233,10 +281,12 @@ export const useEditorController = ({ showError, showInfo }) => {
       if (paramDate) {
         const dateObj = new Date(paramDate);
         const { monthFolder, weekFolder, filePath } = createTitle(dateObj);
+
         expandFolders(monthFolder, weekFolder);
         await processDateSelected(paramDate, filePath);
       } else {
         const { monthFolder, weekFolder, targetDate, filePath } = createTitle();
+
         expandFolders(monthFolder, weekFolder);
         await processDateSelected(targetDate, filePath);
       }
@@ -263,6 +313,6 @@ export const useEditorController = ({ showError, showInfo }) => {
     handleContentChange,
     handleTitleChange,
     handleCanSaveChange,
-  }
+  };
 
 };
