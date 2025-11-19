@@ -10,11 +10,6 @@ export class GithubFile {
     this.savedAt = savedAt;
   }
 
-  /**
-   * GitHub API 응답을 GithubFile 모델로 변환
-   * @param {Object} apiResponse - GitHub contents API 응답
-   * @returns {GithubFile}
-   */
   static fromGitHubAPI(apiResponse) {
     return new GithubFile({
       name: apiResponse.name,
@@ -44,9 +39,6 @@ export class GithubFile {
     return match ? match[1] : null;
   }
 
-  /**
-   * base64 인코딩된 content를 디코딩
-   */
   decodeContent(base64Content) {
     try {
       this.content = decodeFromBase64(base64Content);
@@ -58,12 +50,6 @@ export class GithubFile {
     }
   }
 
-  /**
-   * 제목 포함 파일명 생성
-   * @param {string} date - YYYY-MM-DD 형식
-   * @param {string|null} title - 제목 (선택)
-   * @returns {string} - 파일명
-   */
   static createFileName(date, title = null) {
     if (title && title.trim()) {
       return `${date} ${title.trim()}.md`;
@@ -71,12 +57,6 @@ export class GithubFile {
     return `${date}.md`;
   }
 
-  /**
-   * 날짜로 정렬하기 위한 비교 함수 - 최신순
-   * @param {GithubFile} a
-   * @param {GithubFile} b
-   * @returns {number}
-   */
   static compareByDate(a, b) {
     const dateA = a.extractDate();
     const dateB = b.extractDate();
@@ -85,4 +65,5 @@ export class GithubFile {
     
     return dateB.localeCompare(dateA);
   }
+  
 }
