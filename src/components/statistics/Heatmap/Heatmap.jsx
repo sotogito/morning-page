@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { createTitle } from '../../../utils/dateTitleFormatter';
 import './Heatmap.css';
 
 const Heatmap = ({ data = [] }) => {
@@ -19,14 +20,6 @@ const Heatmap = ({ data = [] }) => {
   const { weeks, months } = useMemo(() => {
     const today = new Date();
     const currentYear = today.getFullYear();
-    
-    //YYYY-MM-DD
-    const formatDate = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
     
     const januaryFirst = new Date(currentYear, 0, 1);
     const decemberLast = new Date(currentYear, 11, 31);
@@ -55,7 +48,7 @@ const Heatmap = ({ data = [] }) => {
         }
         
         const currentDate = new Date(currentYear, 0, 1 + dayIndex);
-        const dateStr = formatDate(currentDate);
+        const dateStr = createTitle(currentDate).targetDate;
         const contribution = dataByDate.get(dateStr);
         
         if (currentDate.getDate() === 1) {
@@ -78,7 +71,7 @@ const Heatmap = ({ data = [] }) => {
     }
 
     const monthsArray = Array.from(monthsMap.entries())
-      .sort((a, b) => a[0] - b[0]) // 월 순서로 정렬
+      .sort((a, b) => a[0] - b[0])
       .map(([_, value]) => value);
 
     return { weeks: weeksArray, months: monthsArray };

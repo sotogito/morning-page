@@ -5,6 +5,7 @@ import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import { INFO_MESSAGE } from '../../constants/InfoMessage';
 import { ERROR_MESSAGE } from '../../constants/ErrorMessage';
+import { TITLE_REGEX } from '../../constants/TitleRegex';
 import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
 import { FavoritesService } from '../../services/favoritesService';
@@ -25,43 +26,11 @@ const FavoritesPage = () => {
   const [sha, setSha] = useState(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
 
-  useEffect(() => {
-    if (!isAuthenticated || !token) {
-      navigate('/login');
-      return;
-    }
-
-    const fetchFavorites = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-
-        const favoritesService = new FavoritesService(token, owner, repo);
-
-        const hasMorningPageFolder = await favoritesService.checkMorningPageFolder();
-        if (!hasMorningPageFolder) {
-          setError(true);
-          setLoading(false);
-          return;
-        }
-
-        const favoritesFile = await favoritesService.fetchFavorites();
-        if (favoritesFile) {
-          const paths = favoritesFile.data.paths || [];
-          setFavorites(paths);
-          setInitialFavorites(paths);
-          setSha(favoritesFile.sha);
-        }
-      } catch (error) {
-        console.error('Failed to fetch favorites:', error);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFavorites();
-  }, [isAuthenticated, token, owner, repo, navigate]);
+  const setFavoritesState = (paths, newSha) => {
+    setFavorites(paths);
+    setInitialFavorites(paths);
+    setSha(newSha);
+  };
 
   const handleAdd = () => {
     let path = inputPath.trim();
@@ -105,9 +74,7 @@ const FavoritesPage = () => {
       const favoritesService = new FavoritesService(token, owner, repo);
       const result = await favoritesService.saveFavorites(validPaths, sha);
       
-      setSha(result.content.sha);
-      setFavorites(validPaths);
-      setInitialFavorites(validPaths);
+      setFavoritesState(validPaths, result.content.sha);
       showInfo(INFO_MESSAGE.FAVORITES_ADD_SUCCESS);
     } catch (error) {
       console.error('Failed to save favorites:', error);
@@ -116,9 +83,9 @@ const FavoritesPage = () => {
   };
 
   const handleFileClick = (path) => {
-    const dateMatch = path.match(/(\d{4}-\d{2}-\d{2})/);
+    const dateMatch = path.match(TITLE_REGEX.ISO);
     if (dateMatch) {
-      navigate(`/editor?date=${dateMatch[1]}`);
+      navigate(`/editor?date=${dateMatch[0]}`);
     }
   };
 
@@ -142,6 +109,42 @@ const FavoritesPage = () => {
   const handleDragEnd = () => {
     setDraggedIndex(null);
   };
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchFavorites = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+
+        const favoritesService = new FavoritesService(token, owner, repo);
+
+        const hasMorningPageFolder = await favoritesService.checkMorningPageFolder();
+        if (!hasMorningPageFolder) {
+          setError(true);
+          setLoading(false);
+          return;
+        }
+
+        const favoritesFile = await favoritesService.fetchFavorites();
+        if (favoritesFile) {
+          const paths = favoritesFile.data.paths || [];
+          setFavoritesState(paths, favoritesFile.sha);
+        }
+      } catch (error) {
+        console.error('Failed to fetch favorites:', error);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavorites();
+  }, [isAuthenticated, token, owner, repo, navigate]);
 
   if (loading) {
     return (

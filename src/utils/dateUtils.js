@@ -19,7 +19,6 @@ export const isNextDay = (date1, date2) => {
   const d1 = new Date(date1);
   const d2 = new Date(date2);
   
-  // date1에 1일 추가
   const nextDay = new Date(d1);
   nextDay.setDate(nextDay.getDate() + 1);
   

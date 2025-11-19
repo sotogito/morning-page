@@ -25,10 +25,6 @@ const EditorPage = () => {
     setShowPreview(!showPreview);
   };
 
-  const handleErrorMessage = (message) => {
-    showError(message);
-  };
-
   const handleFileTreeResize = (delta) => {
     setFileTreeWidth(prev => Math.max(200, Math.min(500, prev + delta)));
   };
@@ -70,7 +66,7 @@ const EditorPage = () => {
               isReadOnly={editorController.isReadOnly}
               showPreview={showPreview}
               onTogglePreview={handleTogglePreview}
-              onError={handleErrorMessage}
+              onError={showError}
             />
           </div>
 
