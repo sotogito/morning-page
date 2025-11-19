@@ -1,3 +1,4 @@
+import { TITLE_REGEX } from '../constants/TitleRegex';
 import { decodeFromBase64 } from '../utils/base64Utils';
 
 export class GithubFile {
@@ -26,16 +27,16 @@ export class GithubFile {
   }
 
   isDatePattern() {
-    return /^\d{4}-\d{2}-\d{2}(\s+.+)?\.md$/.test(this.name);
+    return TITLE_REGEX.FILENAME.test(this.name);
   }
 
   extractDate() {
-    const match = this.name.match(/^(\d{4}-\d{2}-\d{2})/);
+    const match = this.name.match(TITLE_REGEX.START);
     return match ? match[1] : null;
   }
 
   extractTitle() {
-    const match = this.name.match(/^\d{4}-\d{2}-\d{2}\s+(.+)\.md$/);
+    const match = this.name.match(TITLE_REGEX.TITLE_FILENAME);
     return match ? match[1] : null;
   }
 

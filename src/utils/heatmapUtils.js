@@ -1,8 +1,9 @@
 import { HEATMAP_STATUS, HOUR_THRESHOLD } from '../constants/HeatmapStatus';
+import { TITLE_REGEX } from '../constants/TitleRegex';
 
 export const buildHeatmapData = (files) => {
   return files.map(file => {
-    const dateMatch = file.name.match(/\d{4}-\d{2}-\d{2}/);
+    const dateMatch = file.name.match(TITLE_REGEX.ISO);
     const dateStr = dateMatch ? dateMatch[0] : null;
     if (!dateStr) {
       return null;

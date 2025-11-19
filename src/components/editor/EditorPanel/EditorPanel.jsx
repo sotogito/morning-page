@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import './EditorPanel.css';
 import { ERROR_MESSAGE } from '../../../constants/ErrorMessage';
+import { TITLE_REGEX } from '../../../constants/TitleRegex';
 
 const MAX_TITLE_LENGTH = 50;
 const MAX_CONTENT_LENGTH = 30000;
-const DATE_PREFIX_REGEX = /^.*?\d{4}-\d{2}-\d{2}\s?/;
 
 const extractUserTitle = (value) => {
-  const match = value.match(/\d{4}-\d{2}-\d{2}/);
+  const match = value.match(TITLE_REGEX.ISO);
   if (!match) return value;
   return value.slice(match.index + match[0].length).trimStart();
 };
 
 const isTitlePrefixIntact = (currentTitle, nextTitle) => {
-  const prefixMatch = currentTitle.match(DATE_PREFIX_REGEX);
+  const prefixMatch = currentTitle.match(TITLE_REGEX.PREFIX);
   if (prefixMatch) {
     const requiredPrefix = prefixMatch[0];
     if (!nextTitle.startsWith(requiredPrefix)) {

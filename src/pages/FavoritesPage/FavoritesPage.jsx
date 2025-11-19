@@ -5,6 +5,7 @@ import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import ToastContainer from '../../components/common/Message/ToastContainer';
 import { INFO_MESSAGE } from '../../constants/InfoMessage';
 import { ERROR_MESSAGE } from '../../constants/ErrorMessage';
+import { TITLE_REGEX } from '../../constants/TitleRegex';
 import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
 import { FavoritesService } from '../../services/favoritesService';
@@ -116,9 +117,9 @@ const FavoritesPage = () => {
   };
 
   const handleFileClick = (path) => {
-    const dateMatch = path.match(/(\d{4}-\d{2}-\d{2})/);
+    const dateMatch = path.match(TITLE_REGEX.ISO);
     if (dateMatch) {
-      navigate(`/editor?date=${dateMatch[1]}`);
+      navigate(`/editor?date=${dateMatch[0]}`);
     }
   };
 
