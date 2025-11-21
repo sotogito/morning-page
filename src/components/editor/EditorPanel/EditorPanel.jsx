@@ -5,6 +5,7 @@ import { TITLE_REGEX } from '../../../constants/TitleRegex';
 
 const MAX_TITLE_LENGTH = 50;
 const MAX_CONTENT_LENGTH = 30000;
+const FORBIDDEN_TITLE_CHARS_REGEX = /[/\\:*?"<>|%#+{}[\](),;@=&$!.]/g;
 
 const extractUserTitle = (value) => {
   const match = value.match(TITLE_REGEX.ISO);
@@ -28,8 +29,23 @@ const isTitleTooLong = (nextTitle) => {
   return userTitle.length > MAX_TITLE_LENGTH;
 };
 
-const isContentTooLong = (nextContent) => 
-  nextContent.length > MAX_CONTENT_LENGTH;
+const isContentTooLong = (nextContent) => nextContent.length > MAX_CONTENT_LENGTH;
+
+const sanitizeTitleInput = (title) => {
+  const prefixMatch = title.match(TITLE_REGEX.PREFIX);
+  if (!prefixMatch) {
+    return { sanitized: title, hasSpecialChars: false };
+  }
+  
+  const prefix = prefixMatch[0];
+  const userPart = title.slice(prefix.length);
+  const sanitizedUserPart = userPart.replace(FORBIDDEN_TITLE_CHARS_REGEX, '');
+  
+  return { 
+    sanitized: prefix + sanitizedUserPart, 
+    hasSpecialChars: userPart !== sanitizedUserPart 
+  };
+};
 
 const EditorPanel = ({
   title = '',
@@ -80,7 +96,13 @@ const EditorPanel = ({
       return;
     }
 
-    const newTitle = e.target.value;
+    const inputValue = e.target.value;
+    const { sanitized: newTitle, hasSpecialChars } = sanitizeTitleInput(inputValue);
+
+    if (hasSpecialChars) {
+      onError?.(ERROR_MESSAGE.TITLE_SPECIAL_CHARACTERS_NOT_ALLOWED);
+    }
+
     if (!isTitlePrefixIntact(title, newTitle)) {
       onError?.(ERROR_MESSAGE.TITLE_PREFIX_IMMUTABLE);
       return;
