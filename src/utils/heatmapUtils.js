@@ -54,7 +54,11 @@ const buildStatusAndTitle = (baseTitle, dateStr, savedAt, timeConfig) => {
     };
   }
 
-  const savedYmd = savedDate.toISOString().split('T')[0];
+  const year = savedDate.getFullYear();
+  const month = String(savedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(savedDate.getDate()).padStart(2, '0');
+  const savedYmd = `${year}-${month}-${day}`;
+
   if (savedYmd === dateStr) {
     const status = getStatusByTimeConfig(
       savedDate.getHours(),
