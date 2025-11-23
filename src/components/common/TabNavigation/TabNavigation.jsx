@@ -12,7 +12,7 @@ const TabNavigation = () => {
         to="/editor"
         className={cx('tab-button', { active: isActive('/editor') })}
       >
-        에디터
+        작성하기
       </Link>
 
       <Link
@@ -28,6 +28,15 @@ const TabNavigation = () => {
       >
         통계
       </Link>
+
+      <a
+        href="https://excellent-patient-a36.notion.site/2b4bf457247980f8b429d7af3f14b96a?source=copy_link"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="tab-button"
+      >
+        공지사항
+      </a>
     </nav>
   );
 };
