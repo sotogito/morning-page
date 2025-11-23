@@ -77,7 +77,7 @@ const LoginPage = () => {
               id="token"
               type="password"
               className="login-input"
-              placeholder="Personal access token"
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               disabled={isLoading}

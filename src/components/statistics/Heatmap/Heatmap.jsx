@@ -1,13 +1,56 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { createTitle } from '../../../utils/dateTitleFormatter';
+import MorningTimeModal from '../MorningTimeModal/MorningTimeModal';
+import { MorningTimeService } from '../../../services/morningTimeService';
+import { useAuthStore } from '../../../store/authStore';
 import './Heatmap.css';
 
-const Heatmap = ({ data = [] }) => {
+const Heatmap = ({ 
+  data = [],
+  onMorningTimeUpdate,
+  showInfo,
+  showError
+}) => {
+  const { token, owner, repo } = useAuthStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasTemplate, setHasTemplate] = useState(false);
+  const [morningTimeConfig, setMorningTimeConfig] = useState(null);
+  const [morningTimeSha, setMorningTimeSha] = useState(null);
+
   const dataByDate = useMemo(() => {
     const map = new Map();
     data.forEach(d => map.set(d.date, d));
     return map;
   }, [data]);
+
+  const handleModalOpen = async () => {
+    try {
+      const service = new MorningTimeService(token, owner, repo);
+      const hasMorningPage = await service.checkMorningPageFolder();
+      
+      if (!hasMorningPage) {
+        setHasTemplate(false);
+        setIsModalOpen(true);
+        return;
+      }
+
+      const morningTimeFile = await service.fetchMorningTime();
+      if (morningTimeFile) {
+        setHasTemplate(true);
+        setMorningTimeConfig(morningTimeFile.data);
+        setMorningTimeSha(morningTimeFile.sha);
+      } else {
+        setHasTemplate(true);
+        setMorningTimeConfig(null);
+        setMorningTimeSha(null);
+      }
+    } catch (error) {
+      console.error('Failed to check morning time file:', error);
+      setHasTemplate(false);
+    }
+    
+    setIsModalOpen(true);
+  };
 
   const getLevel = (count) => {
     if (count === 0) return 0;
@@ -140,6 +183,33 @@ const Heatmap = ({ data = [] }) => {
           </div>
         </div>
       </div>
+
+      <div className="heatmap-controls">
+        <button 
+          className="morning-time-btn"
+          onClick={handleModalOpen}
+          title="모닝타임 설정"
+        >
+          모닝타임 설정
+        </button>
+      </div>
+
+      <MorningTimeModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        hasTemplate={hasTemplate}
+        initialConfig={morningTimeConfig}
+        sha={morningTimeSha}
+        onSave={(newConfig, newSha) => {
+          setMorningTimeConfig(newConfig);
+          setMorningTimeSha(newSha);
+          if (onMorningTimeUpdate) {
+            onMorningTimeUpdate(newConfig);
+          }
+        }}
+        showInfo={showInfo}
+        showError={showError}
+      />
     </div>
   );
 };
