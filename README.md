@@ -1,9 +1,16 @@
 # Morning Page
 
-> 바쁜 사회 속 별것도 아닌 하찮은 생각들을 얼마나 떠나보냈나요?  
-수치적인 것, 현실적인 것, 실용적인 것, 이곳에서는 당신을 옥죄는 검열관 따위는 존재하지 않습니다.  
-현실에서 잠시 벗어나, 내면 깊숙한 곳의 순수한 생각들과 이야기해 보세요.
-> 
+<p align="center">
+  <img src="public/images/logo_sun.png" alt="모닝페이지 로고" width="200" />
+</p>
+
+<p align="center">
+  <strong><em>바쁜 사회 속 별것도 아닌 하찮은 생각들을 얼마나 떠나보냈나요?</em></strong>
+  <br>
+  <strong><em>수치적인 것, 현실적인 것, 실용적인 것, 이곳에서는 당신을 옥죄는 검열관 따위는 존재하지 않습니다.</em></strong>
+  <br>
+  <strong><em>현실에서 잠시 벗어나, 내면 깊숙한 곳의 순수한 생각들과 이야기해 보세요.</em></strong>
+</p> 
 
 [배포 링크](https://morning-page.vercel.app/)  
 
