@@ -9,7 +9,7 @@
 
 [모닝페이지 템플릿 repo](https://github.com/sotogito/morningpage-template)  
 
-[모닝페이지 셈플 repo](https://github.com/sotogito/morning-page-sample)
+[모닝페이지 샘플 repo](https://github.com/sotogito/morning-page-sample)
 
 ---
 
@@ -22,7 +22,7 @@
 - Frontend: React
 - API: GitHub REST API
 - 배포: Vercel
-- 저장 방식: 사용자의 GitHub Private Repo
+- 저장 방식: 사용자의 GitHub Repository
 
 ---
 ---
@@ -67,7 +67,7 @@
 
 ---
 
-## 제공 기능
+# 제공 기능
 
 ### 1) 에디터
 
