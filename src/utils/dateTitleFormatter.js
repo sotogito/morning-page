@@ -8,19 +8,25 @@ const getWeekOfMonth = (date) => {
   return Math.ceil((dayOfMonth + firstWeekday) / 7);
 };
 
+export const createTodayTitle = () => {
+  const today = new Date();
+  
+  return today.toLocaleDateString('sv-SE');
+}
+
 export const createTitle = (date = new Date()) => {
   const month = date.getMonth() + 1;
   const weekNumber = getWeekOfMonth(date);
-  const today = date.toLocaleDateString('sv-SE');
+  const targetDate = date.toLocaleDateString('sv-SE');
   
   const monthFolder = `${month}월`;
   const weekFolder = `${weekNumber}째주`;
-  const filePath = `${monthFolder}/${weekFolder}/${today}.md`;
+  const filePath = `${monthFolder}/${weekFolder}/${targetDate}.md`;
 
   return {
     monthFolder,
     weekFolder,
-    today,
+    targetDate,
     filePath
   }
 }

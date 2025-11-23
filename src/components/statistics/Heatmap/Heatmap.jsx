@@ -1,12 +1,56 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { createTitle } from '../../../utils/dateTitleFormatter';
+import MorningTimeModal from '../MorningTimeModal/MorningTimeModal';
+import { MorningTimeService } from '../../../services/morningTimeService';
+import { useAuthStore } from '../../../store/authStore';
 import './Heatmap.css';
 
-const Heatmap = ({ data = [] }) => {
+const Heatmap = ({ 
+  data = [],
+  onMorningTimeUpdate,
+  showInfo,
+  showError
+}) => {
+  const { token, owner, repo } = useAuthStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasTemplate, setHasTemplate] = useState(false);
+  const [morningTimeConfig, setMorningTimeConfig] = useState(null);
+  const [morningTimeSha, setMorningTimeSha] = useState(null);
+
   const dataByDate = useMemo(() => {
     const map = new Map();
     data.forEach(d => map.set(d.date, d));
     return map;
   }, [data]);
+
+  const handleModalOpen = async () => {
+    try {
+      const service = new MorningTimeService(token, owner, repo);
+      const hasMorningPage = await service.checkMorningPageFolder();
+      
+      if (!hasMorningPage) {
+        setHasTemplate(false);
+        setIsModalOpen(true);
+        return;
+      }
+
+      const morningTimeFile = await service.fetchMorningTime();
+      if (morningTimeFile) {
+        setHasTemplate(true);
+        setMorningTimeConfig(morningTimeFile.data);
+        setMorningTimeSha(morningTimeFile.sha);
+      } else {
+        setHasTemplate(true);
+        setMorningTimeConfig(null);
+        setMorningTimeSha(null);
+      }
+    } catch (error) {
+      console.error('Failed to check morning time file:', error);
+      setHasTemplate(false);
+    }
+    
+    setIsModalOpen(true);
+  };
 
   const getLevel = (count) => {
     if (count === 0) return 0;
@@ -19,14 +63,6 @@ const Heatmap = ({ data = [] }) => {
   const { weeks, months } = useMemo(() => {
     const today = new Date();
     const currentYear = today.getFullYear();
-    
-    //YYYY-MM-DD
-    const formatDate = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
     
     const januaryFirst = new Date(currentYear, 0, 1);
     const decemberLast = new Date(currentYear, 11, 31);
@@ -55,7 +91,7 @@ const Heatmap = ({ data = [] }) => {
         }
         
         const currentDate = new Date(currentYear, 0, 1 + dayIndex);
-        const dateStr = formatDate(currentDate);
+        const dateStr = createTitle(currentDate).targetDate;
         const contribution = dataByDate.get(dateStr);
         
         if (currentDate.getDate() === 1) {
@@ -78,7 +114,7 @@ const Heatmap = ({ data = [] }) => {
     }
 
     const monthsArray = Array.from(monthsMap.entries())
-      .sort((a, b) => a[0] - b[0]) // 월 순서로 정렬
+      .sort((a, b) => a[0] - b[0])
       .map(([_, value]) => value);
 
     return { weeks: weeksArray, months: monthsArray };
@@ -147,6 +183,33 @@ const Heatmap = ({ data = [] }) => {
           </div>
         </div>
       </div>
+
+      <div className="heatmap-controls">
+        <button 
+          className="morning-time-btn"
+          onClick={handleModalOpen}
+          title="모닝타임 설정"
+        >
+          모닝타임 설정
+        </button>
+      </div>
+
+      <MorningTimeModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        hasTemplate={hasTemplate}
+        initialConfig={morningTimeConfig}
+        sha={morningTimeSha}
+        onSave={(newConfig, newSha) => {
+          setMorningTimeConfig(newConfig);
+          setMorningTimeSha(newSha);
+          if (onMorningTimeUpdate) {
+            onMorningTimeUpdate(newConfig);
+          }
+        }}
+        showInfo={showInfo}
+        showError={showError}
+      />
     </div>
   );
 };

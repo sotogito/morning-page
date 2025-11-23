@@ -1,6 +1,9 @@
 import { GitHubClient } from './githubClient';
 import { GithubFile } from '../models/GithubFile';
 import { ERROR_MESSAGE } from '../constants/ErrorMessage';
+import { COMMIT_MESSAGE } from '../constants/CommitMessage';
+import { StatsService } from './statsService';
+import { encodeToBase64 } from '../utils/base64Utils';
 
 const ENDPOINTS = Object.freeze({
   contents: (owner, repo, path = '') => `/repos/${owner}/${repo}/contents/${path}`,
@@ -12,6 +15,7 @@ export class GitHubFileService {
     this.client = new GitHubClient(token);
     this.owner = owner;
     this.repo = repo;
+    this.statsService = new StatsService(token, owner, repo);
   }
 
   /**
@@ -32,6 +36,9 @@ export class GitHubFileService {
 
       for (const item of contents) {
         if (item.type === 'dir') {
+          if (item.name === '.morningpage') {
+            continue;
+          }
           const childFiles = await this.fetchAllMarkdownFiles(item.path);
           files.push(...childFiles);
         } else {
@@ -82,24 +89,52 @@ export class GitHubFileService {
    * @param {string|null} sha - 기존 파일의 SHA (업데이트 시 필요)
    * @returns {Promise<Object>}
    */
-  async saveFile(path, content, message, sha = null) {
+  async saveFile(path, content, sha = null) {
     try {
       const endpoint = ENDPOINTS.contents(this.owner, this.repo, path);
   
-      const base64Content = btoa(unescape(encodeURIComponent(content)));
+      const base64Content = encodeToBase64(content);
 
       const data = {
-        message,
+        message: COMMIT_MESSAGE.ADD_MORNING_PAGE(path),
         content: base64Content,
       };
       if (sha) {
         data.sha = sha;
       }
       
-      return await this.client.put(endpoint, data);
+      const result = await this.client.put(endpoint, data);
+      
+      await this.updateStatsIfNeeded(path);
+      
+      return result;
     } catch (error) {
       console.error('Failed to save file:', error);
       throw new Error(ERROR_MESSAGE.FAIL_SAVE_FILE);
+    }
+  }
+
+  /**
+   * 필요한 경우 통계 업데이트
+   * @param {string} path - 저장된 파일 경로
+   */
+  async updateStatsIfNeeded(path) {
+    try {
+      const hasMorningPageFolder = await this.statsService.checkMorningPageFolder();
+      if (!hasMorningPageFolder) {
+        console.log('No .morningpage folder found, skipping stats update');
+        return;
+      }
+
+      if (path.endsWith('.md')) {
+        const datePattern = /(\d{4})-(\d{2})-(\d{2})(\s.*)?\.md$/;
+        if (datePattern.test(path)) {
+          await this.statsService.updateStats();
+          console.log('Stats updated for:', path);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update stats:', error);
     }
   }
 

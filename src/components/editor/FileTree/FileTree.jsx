@@ -7,7 +7,6 @@ const FileTree = ({
   onFileSelect, 
   selectedFile = null,
   initialExpandedFolders = [],
-  todayFilePath = '',
   todayDatePrefix = ''
 }) => {
   const [expandedFolders, setExpandedFolders] = useState(new Set(initialExpandedFolders));
@@ -33,10 +32,7 @@ const FileTree = ({
       const isFolder = item.type === FILE_TREE_TYPE.FOLDER;
       const isExpanded = expandedFolders.has(item.path);
       const isSelected = !isFolder && selectedFile?.path === item.path;
-      const isToday = !isFolder && (
-        (todayFilePath && item.path === todayFilePath) ||
-        (todayDatePrefix && item.name.startsWith(todayDatePrefix))
-      );
+      const isToday = !isFolder && todayDatePrefix && item.name.startsWith(todayDatePrefix);
       const displayName = isFolder ? item.name : item.name.replace(/\.md$/, '');
       
       return (

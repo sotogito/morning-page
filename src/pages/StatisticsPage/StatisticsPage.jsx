@@ -1,12 +1,17 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header/Header';
 import TabNavigation from '../../components/common/TabNavigation/TabNavigation';
 import Heatmap from '../../components/statistics/Heatmap/Heatmap';
+import StatsOverview from '../../components/statistics/StatsOverview/StatsOverview';
+import ToastContainer from '../../components/common/Message/ToastContainer';
 import { useAuthStore } from '../../store/authStore';
 import { useFileStore } from '../../store/fileStore';
 import { GitHubFileService } from '../../services/githubFileService';
+import { StatsService } from '../../services/statsService';
+import { MorningTimeService } from '../../services/morningTimeService';
 import { buildHeatmapData } from '../../utils/heatmapUtils';
+import useToast from '../../hooks/useToast';
 import './StatisticsPage.css';
 
 const StatisticsPage = () => {
@@ -17,18 +22,69 @@ const StatisticsPage = () => {
   const updateFile = useFileStore(state => state.updateFile);
   const requestedPathsRef = useRef(new Set());
   const loggedOnceRef = useRef(false);
+  const { toasts, showInfo, showError, removeToast } = useToast();
+  
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
+  const [morningTimeConfig, setMorningTimeConfig] = useState(null);
   
   const heatmapData = useMemo(() => {
-    const data = buildHeatmapData(files);
+    const data = buildHeatmapData(files, morningTimeConfig);
     return data.map(item => ({
       ...item,
       onClick: () => navigate(`/editor?date=${item.date}`)
     }));
-  }, [files, navigate]);
+  }, [files, morningTimeConfig, navigate]);
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
       navigate('/login');
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setStatsLoading(true);
+        setStatsError(false);
+        
+        const statsService = new StatsService(token, owner, repo);
+        
+        const hasMorningPageFolder = await statsService.checkMorningPageFolder();
+        if (!hasMorningPageFolder) {
+          setStatsError(true);
+          setStatsLoading(false);
+          return;
+        }
+        
+        const statsFile = await statsService.fetchStats();
+        if (statsFile) {
+          setStats(statsFile.data);
+        } else {
+          setStatsError(true);
+        }
+
+        try {
+          const morningTimeService = new MorningTimeService(token, owner, repo);
+          const morningTimeFile = await morningTimeService.fetchMorningTime();
+          if (morningTimeFile) {
+            setMorningTimeConfig(morningTimeFile.data);
+          }
+        } catch (error) {
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        setStatsError(true);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isAuthenticated, token, owner, repo, navigate]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) {
       return;
     }
 
@@ -69,10 +125,21 @@ const StatisticsPage = () => {
 
   return (
     <div className="statistics-page">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       <Header username={user?.name || user?.login || 'User'} repository={repo || 'repository'} />
       <TabNavigation />
       <div className="statistics-page-content">
-        <Heatmap data={heatmapData} />
+        <Heatmap 
+          data={heatmapData}
+          onMorningTimeUpdate={(newConfig) => setMorningTimeConfig(newConfig)}
+          showInfo={showInfo}
+          showError={showError}
+        />
+        <StatsOverview 
+          stats={stats}
+          error={statsError}
+          loading={statsLoading}
+        />
       </div>
     </div>
   );

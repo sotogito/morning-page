@@ -1,6 +1,51 @@
 import { useState, useEffect } from 'react';
 import './EditorPanel.css';
 import { ERROR_MESSAGE } from '../../../constants/ErrorMessage';
+import { TITLE_REGEX } from '../../../constants/TitleRegex';
+
+const MAX_TITLE_LENGTH = 50;
+const MAX_CONTENT_LENGTH = 30000;
+const FORBIDDEN_TITLE_CHARS_REGEX = /[/\\:*?"<>|%#+{}[\](),;@=&$!.]/g;
+
+const extractUserTitle = (value) => {
+  const match = value.match(TITLE_REGEX.ISO);
+  if (!match) return value;
+  return value.slice(match.index + match[0].length).trimStart();
+};
+
+const isTitlePrefixIntact = (currentTitle, nextTitle) => {
+  const prefixMatch = currentTitle.match(TITLE_REGEX.PREFIX);
+  if (prefixMatch) {
+    const requiredPrefix = prefixMatch[0];
+    if (!nextTitle.startsWith(requiredPrefix)) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const isTitleTooLong = (nextTitle) => {
+  const userTitle = extractUserTitle(nextTitle);
+  return userTitle.length > MAX_TITLE_LENGTH;
+};
+
+const isContentTooLong = (nextContent) => nextContent.length > MAX_CONTENT_LENGTH;
+
+const sanitizeTitleInput = (title) => {
+  const prefixMatch = title.match(TITLE_REGEX.PREFIX);
+  if (!prefixMatch) {
+    return { sanitized: title, hasSpecialChars: false };
+  }
+  
+  const prefix = prefixMatch[0];
+  const userPart = title.slice(prefix.length);
+  const sanitizedUserPart = userPart.replace(FORBIDDEN_TITLE_CHARS_REGEX, '');
+  
+  return { 
+    sanitized: prefix + sanitizedUserPart, 
+    hasSpecialChars: userPart !== sanitizedUserPart 
+  };
+};
 
 const EditorPanel = ({
   title = '',
@@ -39,13 +84,10 @@ const EditorPanel = ({
     }
 
     const newContent = e.target.value;
-    const currentLength = content?.length || 0;
-    
-    if (newContent.length < currentLength) {
-      onError?.(ERROR_MESSAGE.DELETE_TEXT_FAIL);
+    if (isContentTooLong(newContent)) {
+      onError?.(ERROR_MESSAGE.CONTENT_LIMIT_EXCEEDED(MAX_CONTENT_LENGTH));
       return;
     }
-    
     onContentChange?.(newContent);
   };
 
@@ -54,7 +96,24 @@ const EditorPanel = ({
       return;
     }
 
-    onTitleChange?.(e.target.value);
+    const inputValue = e.target.value;
+    const { sanitized: newTitle, hasSpecialChars } = sanitizeTitleInput(inputValue);
+
+    if (hasSpecialChars) {
+      onError?.(ERROR_MESSAGE.TITLE_SPECIAL_CHARACTERS_NOT_ALLOWED);
+    }
+
+    if (!isTitlePrefixIntact(title, newTitle)) {
+      onError?.(ERROR_MESSAGE.TITLE_PREFIX_IMMUTABLE);
+      return;
+    }
+
+    if (isTitleTooLong(newTitle)) {
+      onError?.(ERROR_MESSAGE.TITLE_LIMIT_EXCEEDED(MAX_TITLE_LENGTH));
+      return;
+    }
+
+    onTitleChange?.(newTitle);
   };
 
   const handleContentDelete = (e) => {

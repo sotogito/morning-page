@@ -1,0 +1,194 @@
+.favorites-page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-primary);
+}
+
+.favorites-page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xl);
+}
+
+.favorites-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.favorites-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* 로딩/에러 */
+.favorites-loading,
+.favorites-error {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* 입력 섹션 */
+.favorites-input-section {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.favorites-input {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  outline: none;
+}
+
+.favorites-input:focus {
+  border-color: var(--color-accent);
+}
+
+.favorites-add-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.favorites-add-btn:hover {
+  background-color: var(--color-text-primary);
+}
+
+/* 즐겨찾기 목록 */
+.favorites-list {
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  min-height: 200px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.favorites-empty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.favorites-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-secondary);
+  background-color: var(--color-bg-secondary);
+  cursor: move;
+  transition: background-color 0.2s;
+}
+
+.favorites-item:last-child {
+  border-bottom: none;
+}
+
+.favorites-item:hover {
+  background-color: var(--color-bg-tertiary);
+}
+
+.favorites-item-drag {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-lg);
+  cursor: grab;
+  user-select: none;
+}
+
+.favorites-item-drag:active {
+  cursor: grabbing;
+}
+
+.favorites-item-path {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  padding: var(--spacing-xs) 0;
+}
+
+.favorites-item-path:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.favorites-item-remove {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.favorites-item-remove:hover {
+  background-color: #fee;
+  color: #d00;
+}
+
+/* 저장 버튼 */
+.favorites-save-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.favorites-save-btn {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.favorites-save-btn:hover {
+  background-color: var(--color-text-primary);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .favorites-page-content {
+    padding: var(--spacing-md);
+  }
+
+  .favorites-container {
+    max-width: 100%;
+  }
+
+  .favorites-input-section {
+    flex-direction: column;
+  }
+
+  .favorites-add-btn {
+    width: 100%;
+  }
+}
+

@@ -51,7 +51,10 @@ const LoginPage = () => {
     <>
       <div className={`login-page ${isModalOpen || isHoveringInfo ? 'modal-open' : ''}`}>
         <div className="login-card">
-          <h1 className="login-title">morning page 🌞</h1>
+          <h1 className="login-title">
+            Morning<br/>Page
+            <img src="/images/logo_sun.png" alt="morning page logo" className="login-logo" />
+          </h1>
 
           <form onSubmit={handleLogin}>
             <label className="login-label" htmlFor="repository">
@@ -74,7 +77,7 @@ const LoginPage = () => {
               id="token"
               type="password"
               className="login-input"
-              placeholder="Personal access token"
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               disabled={isLoading}
@@ -90,7 +93,9 @@ const LoginPage = () => {
               {isLoading ? '로그인 중...' : '로그인'}
             </button>
           </form>
-          
+        </div>
+        
+        <div className="login-info-links">
           <button 
             className="login-info-link"
             onClick={() => setIsModalOpen(true)}
@@ -99,6 +104,16 @@ const LoginPage = () => {
           >
             모닝페이지란?
           </button>
+          <a
+            className="login-info-link"
+            href="https://excellent-patient-a36.notion.site/2aebf45724798023a8fee4fd43e79b8e?source=copy_link"
+            target="_blank"
+            rel="noopener noreferrer"
+            onMouseEnter={() => setIsHoveringInfo(true)}
+            onMouseLeave={() => !isModalOpen && setIsHoveringInfo(false)}
+          >
+            모닝페이지 사용 가이드
+          </a>
         </div>
       </div>
       <ToastContainer toasts={toasts} onClose={removeToast} />
@@ -121,7 +136,8 @@ const LoginPage = () => {
 
           <h2 className="modal-info-title">줄리아 카메론의 『아티스트 웨이』 모닝페이지</h2>
           <p className="modal-info-text">
-            모닝페이지는 줄리아 카메론의 『아티스트 웨이』에서 소개된 창조성 회복 훈련입니다. 저자는 10년이 넘는 기간 동안 꾸준히 실천해왔으며, 전 세계 수많은 아티스트들도 이 방법을 자신의 작업 과정에 적용하고 있습니다.
+            모닝페이지는 줄리아 카메론의 『아티스트 웨이』에서 소개된 창조성 회복 훈련입니다. 저자는 10년이 넘는 기간 동안 꾸준히 실천해왔으며, 
+            전 세계 수많은 아티스트들도 이 방법을 자신의 작업 과정에 적용하고 있습니다.
           </p>
           <ul className="modal-info-list">
             <li>잘못 쓴 모닝 페이지란 없다.</li>
@@ -130,7 +146,11 @@ const LoginPage = () => {
             <li>세 쪽을 가득 채울 때까지 무슨 말이든 쓰는 것이다.</li>
           </ul>
           <blockquote className="modal-info-quote">
-            "모닝페이지는 밝은 내용일 수도 있지만 부정적인 내용일 수도 있고, 내용이 조각조각 끊어지기도 하며 자기 연민에 빠지기도 한다. 똑같은 이야기를 되풀이할 때도 있고, 과장된 내용일 수도 있으며, 유치하기도 하고 과격하거나 아니면 침착한 내용인 경우도 있다. 심지어 자신이 바보같이 느껴지는 내용일 수도 있다. 하지만 어떤 것이든 괜찮다. 피곤하든, 심술이 낫든, 마음이 산만해졌든, 스트레스틑 받았든 그런 것이 무슨 상관인가? 모닝 페이지가 당신의 내면에 있는 어린 아티스트를 키워줄 것이다. 그러니 매일 모닝페이지를 쓰는 걸 잊지 말자."
+            "모닝페이지는 밝은 내용일 수도 있지만 부정적인 내용일 수도 있고, 
+            내용이 조각조각 끊어지기도 하며 자기 연민에 빠지기도 한다. 똑같은 이야기를 되풀이할 때도 있고, 
+            과장된 내용일 수도 있으며, 유치하기도 하고 과격하거나 아니면 침착한 내용인 경우도 있다. 심지어 자신이 바보같이 느껴지는 내용일 수도 있다. 
+            하지만 어떤 것이든 괜찮다. 피곤하든, 심술이 낫든, 마음이 산만해졌든, 스트레스를 받았든 그런 것이 무슨 상관인가? 
+            모닝 페이지가 당신의 내면에 있는 어린 아티스트를 키워줄 것이다. 그러니 매일 모닝페이지를 쓰는 걸 잊지 말자."
           </blockquote>
         </div>
       </Modal>

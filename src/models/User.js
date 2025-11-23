@@ -19,9 +19,6 @@ export class User {
     return Boolean(this.login && this.name);
   }
 
-  /**
-   * localStorage에 저장할 수 있는 형태로 변환
-   */
   toJSON() {
     return {
       login: this.login,
@@ -31,9 +28,6 @@ export class User {
     };
   }
 
-  /**
-   * localStorage에서 User 모델로 복원
-   */
   static fromJSON(json) {
     return new User(json);
   }
