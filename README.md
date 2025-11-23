@@ -1,20 +1,21 @@
 # Morning Page
 
-> 바쁜 사회 속 별것도 아닌 하찮은 생각들을 얼마나 떠나보냈나요?
-수치적인 것, 현실적인 것, 실용적인 것, 이곳에서는 당신을 옥죄는 검열관 따위는 존재하지 않습니다.
+> 바쁜 사회 속 별것도 아닌 하찮은 생각들을 얼마나 떠나보냈나요?  
+수치적인 것, 현실적인 것, 실용적인 것, 이곳에서는 당신을 옥죄는 검열관 따위는 존재하지 않습니다.  
 현실에서 잠시 벗어나, 내면 깊숙한 곳의 순수한 생각들과 이야기해 보세요.
 > 
-
-
-- 개발자 : sukipi 수키피
-- 일러스트 : sukipi 수키피
-- email : [sukipikim@gmail.com](mailto:sukipikim@gmail.com)
 
 [배포 링크](https://morning-page.vercel.app/)  
 
 [모닝페이지 템플릿 repo](https://github.com/sotogito/morningpage-template)  
 
 [모닝페이지 셈플 repo](https://github.com/sotogito/morning-page-sample)
+
+---
+
+#### 개발자 : sukipi 수키피
+#### 일러스트 : sukipi 수키피
+#### email : [sukipikim@gmail.com](mailto:sukipikim@gmail.com)
 
 ### 기술 스택
 
@@ -139,3 +140,4 @@ Cursor, Claude Code 등을 권장합니다.
 - GitHub PAT 기반으로 로그인하며, 모든 기록은 사용자의 개인 GitHub 저장소에 저장됩니다.
 - 템플릿(.morningpage) 없이도 사용 가능하지만, 즐겨찾기 및 일부 통계 기능이 제한됩니다.
 - 연도별로 저장소를 따로 관리하는 방식을 권장합니다.
+
