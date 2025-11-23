@@ -5,13 +5,40 @@ const extractDateFromName = (name) => name.match(TITLE_REGEX.ISO)?.[0] ?? null;
 
 const stripExtension = (name) => name.replace(/\.md$/, '');
 
-const getStatusByHour = (hour) => {
+const timeToMinutes = (timeStr) => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+const getDefaultStatusByHour = (hour) => {
   if (hour < HOUR_THRESHOLD.MORNING) return HEATMAP_STATUS.GREEN;
   if (hour < HOUR_THRESHOLD.AFTERNOON) return HEATMAP_STATUS.ORANGE;
   return HEATMAP_STATUS.RED;
 };
 
-const buildStatusAndTitle = (baseTitle, dateStr, savedAt) => {
+const getStatusByTimeConfig = (hour, minute, timeConfig) => {
+  if (!timeConfig) {
+    return getDefaultStatusByHour(hour);
+  }
+
+  const currentMinutes = hour * 60 + minute;
+
+  const greenStart = timeToMinutes(timeConfig.green.start);
+  const greenEnd = timeToMinutes(timeConfig.green.end);
+  if (currentMinutes >= greenStart && currentMinutes < greenEnd) {
+    return HEATMAP_STATUS.GREEN;
+  }
+
+  const orangeStart = timeToMinutes(timeConfig.orange.start);
+  const orangeEnd = timeToMinutes(timeConfig.orange.end);
+  if (currentMinutes >= orangeStart && currentMinutes < orangeEnd) {
+    return HEATMAP_STATUS.ORANGE;
+  }
+
+  return HEATMAP_STATUS.RED;
+};
+
+const buildStatusAndTitle = (baseTitle, dateStr, savedAt, timeConfig) => {
   if (!savedAt) {
     return {
       status: HEATMAP_STATUS.GRAY,
@@ -29,8 +56,13 @@ const buildStatusAndTitle = (baseTitle, dateStr, savedAt) => {
 
   const savedYmd = savedDate.toISOString().split('T')[0];
   if (savedYmd === dateStr) {
+    const status = getStatusByTimeConfig(
+      savedDate.getHours(),
+      savedDate.getMinutes(),
+      timeConfig
+    );
     return {
-      status: getStatusByHour(savedDate.getHours()),
+      status,
       title: `${baseTitle} • ${savedDate.toLocaleString()}`,
     };
   }
@@ -41,14 +73,14 @@ const buildStatusAndTitle = (baseTitle, dateStr, savedAt) => {
   };
 };
 
-export const buildHeatmapData = (files) => {
+export const buildHeatmapData = (files, timeConfig = null) => {
   return files
     .map((file) => {
       const date = extractDateFromName(file.name);
       if (!date) return null;
 
       const baseTitle = stripExtension(file.name);
-      const { status, title } = buildStatusAndTitle(baseTitle, date, file.savedAt);
+      const { status, title } = buildStatusAndTitle(baseTitle, date, file.savedAt, timeConfig);
 
       return {
         date,
