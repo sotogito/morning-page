@@ -65,7 +65,7 @@
 1. 모닝페이지를 기록할 전용 저장소를 **private**으로 생성합니다.
 2. 다음 템플릿을 다운로드하고, 저장소에 `.morningpage` 폴더를 추가합니다.
     
-    `템플릿 : https://github.com/sotogito/morningpage-template.git`
+    템플릿 : [https://github.com/sotogito/morningpage-template.git](https://github.com/sotogito/morningpage-template.git)
     
 
 ### 로그인
